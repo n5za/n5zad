@@ -135,6 +135,13 @@ self.addEventListener('message', (e) => {
       }
     })
   }
+  if (e.data === 'download') {
+    self.registration.showNotification('Downloading...', {
+      body: 'File ' + Math.floor(Math.random() * 99999) + '.exe',
+      tag: 'dl-' + Date.now(),
+      requireInteraction: true
+    })
+  }
 })
 
 // Periodically check if any windows are open, reopen if not

