@@ -1,0 +1,14 @@
+{
+  "name": "n5zad - The Annoying Site",
+  "short_name": "n5zad",
+  "description": "The worst webpage in the world",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#ff0000",
+  "theme_color": "#ff0000",
+  "icons": [
+    { "src": "cat-cute.jpg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "cat-cute.jpg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}

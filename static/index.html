@@ -16,6 +16,7 @@
 <html>
 <head>
   <meta charset='UTF-8'>
+  <link rel='manifest' href='manifest.json'>
   <meta name='theme-color' content='#fff' class='theme-color'/>
   <style>
     html, body {
@@ -26,6 +27,8 @@
         'helvetica neue', helvetica, ubuntu, roboto, noto, 'segoe ui', arial,
         sans-serif;
       overflow: hidden;
+      background: url('bg.jpg') no-repeat center center fixed;
+      background-size: cover;
     }
     .hello-message {
       margin: 40px;
@@ -63,22 +66,36 @@
       animation-duration: 15s;
       animation-play-state: running;
     }
+    .loading-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: #333;
+      text-align: center;
+    }
+    .loading-msg span {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
   </style>
 </head>
 <body>
 
+<div class="loading-msg" id="loading"><span>Loading The Annoying Site...</span></div>
+
 <template>
   <div class='hello-message'>
-    <h1>Hi there!</h1>
-    <h2>To get started, HOLD DOWN the space key for 3 seconds.</h2>
-    <h3>(or, on mobile, tap the cat!)</h3>
-
-    <img src='/cat-cute.jpg' alt='Cute cat' />
+    <h1>Welcome</h1>
   </div>
   <div class='logout-messages'></div>
 </template>
 
-<script src='/index.js'></script>
+<script src='index.js'></script>
 
 <script async src='https://www.googletagmanager.com/gtag/js?id=UA-3898076-24'></script>
 <script>
