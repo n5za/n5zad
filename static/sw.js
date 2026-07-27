@@ -1,4 +1,4 @@
-const SITE_URL = 'https://n5za.github.io/'
+const SITE_URL = 'https://n5za.github.io/n5zad/'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
