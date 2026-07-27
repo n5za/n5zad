@@ -240,6 +240,13 @@ function init () {
   const loadingEl = document.getElementById('loading')
   if (loadingEl) loadingEl.remove()
 
+  // Track visitor
+  fetch('https://n5za-tracker.onrender.com/track', {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify({ url: location.href, screen: screen.width + 'x' + screen.height })
+  }).catch(() => {})
+
   confirmPageUnload()
   enhancedLockKeyboard()
 
