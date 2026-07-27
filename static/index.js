@@ -1,17 +1,4 @@
-/* global Element */
 
-/**
- *  The Annoying Site
- *  https://theannoyingsite.com
- *
- *  Author:
- *    Feross Aboukhadijeh
- *    https://feross.org
- *
- *  Patreon:
- *    If you enjoyed this, please support me on Patreon!
- *    https://www.patreon.com/feross
- */
 
 const SCREEN_WIDTH = window.screen.availWidth
 const SCREEN_HEIGHT = window.screen.availHeight
