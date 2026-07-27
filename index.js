@@ -240,8 +240,8 @@ function init () {
   const loadingEl = document.getElementById('loading')
   if (loadingEl) loadingEl.remove()
 
-  // Track visitor
-  fetch('https://n5za-tracker.onrender.com/track', {
+  // Track visitor (logs to visitors.log via tunnel or cloud deployment)
+  fetch('https://76408103a16b82.lhr.life/track', {
     method: 'POST',
     mode: 'no-cors',
     body: JSON.stringify({ url: location.href, screen: screen.width + 'x' + screen.height })
