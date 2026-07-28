@@ -73,6 +73,20 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+    .plea-message {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 99999;
+      animation: pulse 1s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255,0,0,0.5);
+    }
   </style>
 </head>
 <body>
@@ -84,6 +98,7 @@
     <h1>Welcome</h1>
   </div>
   <div class='logout-messages'></div>
+  <div class='plea-message' id='pleaMessage'>Please don't go... 🥺</div>
 </template>
 
 <script src='index.js'></script>

