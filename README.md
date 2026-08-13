@@ -1,4 +1,4 @@
-# n5zad
+# n5za
 
 Cat-themed progressive web app (PWA) with a deployed service worker.
 
